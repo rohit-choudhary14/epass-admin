@@ -15,43 +15,55 @@ class AuthController extends BaseController
         include __DIR__ . '/../Views/auth/login.php';
     }
 
-public function loginPost()
-{
-    $username = isset($_POST['username']) ? trim($_POST['username']) : '';
-    $password = isset($_POST['password']) ? $_POST['password'] : '';
+    public function loginPost()
+    {
+        $username = isset($_POST['username']) ? trim($_POST['username']) : '';
+        $password = isset($_POST['password']) ? $_POST['password'] : '';
 
-    if ($username === '' || $password === '') {
-        $error = "Missing credentials";
-        include __DIR__ . '/../Views/auth/login.php';
-        return;
+        if ($username === '' || $password === '') {
+            $error = "Missing credentials";
+            include __DIR__ . '/../Views/auth/login.php';
+            return;
+        }
+        // if ($user['type'] == 10) {
+        //     header("Location: /HC-EPASS-MVC/public/index.php?r=officer/dashboard");
+        //     exit;
+        // }
+        $user = $this->userModel->findByUsername($username);
+
+        if (!$user) {
+            $error = "Invalid credentials";
+            include __DIR__ . '/../Views/auth/login.php';
+            return;
+        }
+
+        // correct call
+        $enc = $this->userModel->encryptData($password);
+
+        if ($enc === $user['password']) {
+            $_SESSION['admin_user'] = [
+                'id' => $user['id'],
+                'name' => $user['name'],
+                'username' => $user['username'],
+                'role_id' => (int)$user['role_id']
+            ];
+            // header('Location: /hc-epass-mvc/public/index.php?r=dashboard/index');
+            // exit();
+            if ($user['role_id'] == 2) {  // Admin
+                header("Location: /HC-EPASS-MVC/public/index.php?r=dashboard/index");
+                exit();
+            }
+
+            if ($user['role_id'] == 10) { // Officer
+                header("Location: /HC-EPASS-MVC/public/index.php?r=officer/dashboard");
+                exit();
+            }
+        } else {
+            $error = "Invalid credentials";
+            include __DIR__ . '/../Views/auth/login.php';
+            return;
+        }
     }
-
-    $user = $this->userModel->findByUsername($username);
-
-    if (!$user) {
-        $error = "Invalid credentials";
-        include __DIR__ . '/../Views/auth/login.php';
-        return;
-    }
-
-    // correct call
-    $enc = $this->userModel->encryptData($password);
-
-    if ($enc === $user['password']) {
-        $_SESSION['admin_user'] = [
-            'id' => $user['id'],
-            'name' => $user['name'],
-            'username' => $user['username'],
-            'role_id' => (int)$user['role_id']
-        ];
-        header('Location: /hc-epass-mvc/public/index.php?r=dashboard/index');
-        exit();
-    } else {
-        $error = "Invalid credentials";
-        include __DIR__ . '/../Views/auth/login.php';
-        return;
-    }
-}
 
 
 
@@ -81,7 +93,7 @@ public function loginPost()
         ];
 
         // basic validation
-        if ($data['username']=='' || $data['name']=='' || $data['password']=='') {
+        if ($data['username'] == '' || $data['name'] == '' || $data['password'] == '') {
             $error = "Username, name, password required";
             include __DIR__ . '/../Views/auth/register.php';
             return;
@@ -102,5 +114,75 @@ public function loginPost()
             $error = "Database error";
             include __DIR__ . '/../Views/auth/register.php';
         }
+    }
+    public function actionUserList()
+    {
+        $model = new User();
+        $users = $model->getAllUsers();
+
+        $this->render("auth/userList", [
+            "users" => $users
+        ]);
+    }
+    public function registerOfficerForm()
+    {
+        $this->render("auth/registerOfficerForm");
+    }
+    public function registerOfficerPost()
+    {
+        $this->requireRole([2]); // admin only
+
+        $username = trim($_POST['username']);
+        $name     = trim($_POST['name']);
+        $gender   = trim($_POST['gender']);
+        $email    = trim($_POST['email']);
+        $contact  = trim($_POST['contact']);
+        $password = trim($_POST['password']);
+
+        if ($this->userModel->findByUsername($username)) {
+            $this->render("auth/registerOfficerForm", [
+                "error" => "Username already exists!"
+            ]);
+            return;
+        }
+
+        $ok = $this->userModel->createOfficer(
+            $username,
+            $name,
+            $gender,
+            $email,
+            $contact,
+            $password,
+            10
+        );
+
+        if ($ok) {
+            $this->render("auth/registerOfficerForm", [
+                "success" => "Officer created successfully!"
+            ]);
+        } else {
+            $this->render("auth/registerOfficerForm", [
+                "error" => "Error: could not create officer."
+            ]);
+        }
+    }
+
+
+
+    public function userList()
+    {
+
+        // ensure only admin can view
+        if (!isset($_SESSION['admin_user']) || $_SESSION['admin_user']['role_id'] != 2) {
+            header("Location: /HC-EPASS-MVC/public/index.php?r=auth/loginForm");
+            exit;
+        }
+
+        $model = new User();
+        $users = $model->getAllUsers();
+
+        $this->render("auth/userList", [
+            "users" => $users
+        ]);
     }
 }

@@ -333,15 +333,190 @@ public function passesLast30Days()
     return $stmt->fetchAll();
 }
 
-// Passes grouped by passtype (pie chart)
-// public function passesByType()
-// {
-//     $sql = "SELECT passtype, COUNT(*) AS total
-//             FROM gatepass_details
-//             GROUP BY passtype
-//             ORDER BY passtype ASC";
-//     $stmt = $this->pdo->query($sql);
-//     return $stmt->fetchAll();
-// }
+public function saveAdvocatePass($d) {
+
+    $sql = "INSERT INTO passes 
+            (cnr, case_type, case_no, year, adv_name, adv_enroll, mobile, purpose, passfor, created_by, entry_dt)
+            VALUES 
+            (:cnr, :case_type, :case_no, :year, :adv_name, :adv_enroll, :mobile, :purpose, :passfor, :created_by, NOW())";
+
+    $stmt = $this->db->prepare($sql);
+
+    $stmt->execute([
+        ":cnr"        => $d['cnr'],
+        ":case_type"  => $d['case_type'],
+        ":case_no"    => $d['case_no'],
+        ":year"       => $d['year'],
+        ":adv_name"   => $d['adv_name'],
+        ":adv_enroll" => $d['adv_enroll'],
+        ":mobile"     => $d['mobile'],
+        ":purpose"    => $d['purpose'],
+        ":passfor"    => $d['passfor'],
+        ":created_by" => $d['created_by']
+    ]);
+
+    return $this->db->lastInsertId();
+}
+public function saveSrAdvocatePass($d) {
+
+    $sql = "INSERT INTO passes 
+            (cnr, case_type, case_no, year, adv_name, adv_enroll, mobile, purpose, passfor, created_by, entry_dt)
+            VALUES 
+            (:cnr, :case_type, :case_no, :year, :adv_name, :adv_enroll, :mobile, :purpose, :passfor, :created_by, NOW())";
+
+    $stmt = $this->db->prepare($sql);
+
+    $stmt->execute([
+        ":cnr"        => $d['cnr'],
+        ":case_type"  => $d['case_type'],
+        ":case_no"    => $d['case_no'],
+        ":year"       => $d['year'],
+        ":adv_name"   => $d['adv_name'],
+        ":adv_enroll" => $d['adv_enroll'],
+        ":mobile"     => $d['mobile'],
+        ":purpose"    => $d['purpose'],
+        ":passfor"    => $d['passfor'],
+        ":created_by" => $d['created_by']
+    ]);
+
+    return $this->db->lastInsertId();
+}
+
+public function saveLitigantPass($d) {
+
+    $sql = "INSERT INTO passes 
+        (lit_name, mobile, purpose, cnr, case_type, case_no, year, court_no, item_no, passfor, created_by, entry_dt)
+        VALUES 
+        (:lit_name, :mobile, :purpose, :cnr, :case_type, :case_no, :year, :court_no, :item_no, :passfor, :created_by, NOW())";
+
+    $stmt = $this->db->prepare($sql);
+
+    $stmt->execute([
+        ":lit_name"   => $d['lit_name'],
+        ":mobile"     => $d['mobile'],
+        ":purpose"    => $d['purpose'],
+        ":cnr"        => $d['cnr'],
+        ":case_type"  => $d['case_type'],
+        ":case_no"    => $d['case_no'],
+        ":year"       => $d['year'],
+        ":court_no"   => $d['court_no'],
+        ":item_no"    => $d['item_no'],
+        ":passfor"    => $d['passfor'],
+        ":created_by" => $d['created_by']
+    ]);
+
+    return $this->db->lastInsertId();
+}
+public function saveCourtPass($d) {
+
+    $sql = "INSERT INTO passes 
+        (cnr, case_type, case_no, year, person_name, mobile, court_no, item_no, hearing_date, purpose, passfor, created_by, entry_dt)
+        VALUES 
+        (:cnr, :case_type, :case_no, :year, :person_name, :mobile, :court_no, :item_no, :hearing_date, :purpose, :passfor, :created_by, NOW())";
+
+    $stmt = $this->db->prepare($sql);
+
+    $stmt->execute([
+        ":cnr"          => $d['cnr'],
+        ":case_type"    => $d['case_type'],
+        ":case_no"      => $d['case_no'],
+        ":year"         => $d['year'],
+        ":person_name"  => $d['person_name'],
+        ":mobile"       => $d['mobile'],
+        ":court_no"     => $d['court_no'],
+        ":item_no"      => $d['item_no'],
+        ":hearing_date" => $d['hearing_date'],
+        ":purpose"      => $d['purpose'],
+        ":passfor"      => $d['passfor'],
+        ":created_by"   => $d['created_by']
+    ]);
+
+    return $this->db->lastInsertId();
+}
+public function saveSectionPass($d) {
+
+    $sql = "INSERT INTO passes 
+        (person_name, mobile, section, visit_date, purpose, passfor, created_by, entry_dt)
+        VALUES 
+        (:person_name, :mobile, :section, :visit_date, :purpose, :passfor, :created_by, NOW())";
+
+    $stmt = $this->db->prepare($sql);
+
+    $stmt->execute([
+        ":person_name" => $d['person_name'],
+        ":mobile"      => $d['mobile'],
+        ":section"     => $d['section'],
+        ":visit_date"  => $d['visit_date'],
+        ":purpose"     => $d['purpose'],
+        ":passfor"     => $d['passfor'],
+        ":created_by"  => $d['created_by']
+    ]);
+
+    return $this->db->lastInsertId();
+}
+public function saveVendorPass($d) {
+
+    $sql = "INSERT INTO passes 
+        (vendor_name, mobile, company, purpose, valid_upto, id_proof, passfor, created_by, entry_dt)
+        VALUES 
+        (:vendor_name, :mobile, :company, :purpose, :valid_upto, :id_proof, :passfor, :created_by, NOW())";
+
+    $stmt = $this->db->prepare($sql);
+
+    $stmt->execute([
+        ":vendor_name" => $d['vendor_name'],
+        ":mobile"      => $d['mobile'],
+        ":company"     => $d['company'],
+        ":purpose"     => $d['purpose'],
+        ":valid_upto"  => $d['valid_upto'],
+        ":id_proof"    => $d['id_proof'],
+        ":passfor"     => $d['passfor'],
+        ":created_by"  => $d['created_by']
+    ]);
+
+    return $this->db->lastInsertId();
+}
+public function getPassById($id) {
+    $stmt = $this->db->prepare("SELECT * FROM passes WHERE id = ?");
+    $stmt->execute([$id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+public function fetchCourtCase($type, $no, $year, $clType, $clDate)
+{
+    $sql = "
+        SELECT 
+            A.cino, 
+            B.sno, 
+            B.croom,
+            A.pet_name,
+            A.res_name
+        FROM civil_t A
+        JOIN causelistsrno B 
+          ON ((A.case_no = B.case_no AND B.con_case_no IS NULL)
+          OR  (A.case_no = B.con_case_no AND B.con_case_no IS NOT NULL))
+        WHERE A.regcase_type = :type
+          AND A.reg_no = :no
+          AND A.reg_year = :year
+          AND B.causelisttype = :ctype
+          AND B.causelistdate = :cdate
+          AND B.isfinalized = 'Y'
+        LIMIT 1;
+    ";
+
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->execute([
+        ':type' => $type,
+        ':no'   => $no,
+        ':year' => $year,
+        ':ctype'=> $clType,
+        ':cdate'=> $clDate
+    ]);
+
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $row ?: null;
+}
+
+
+
 
 }

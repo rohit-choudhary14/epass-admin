@@ -1,6 +1,4 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
-
-<!-- DATATABLE CSS + JS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
 
@@ -12,6 +10,8 @@
 body {
     background:#f3f4f6;
     font-family:"Inter","Segoe UI",sans-serif;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 /* Main container */
@@ -32,43 +32,82 @@ h2 {
     color:#111827;
 }
 
-/* FILTER BAR PERFECT CLEAN */
+/* Responsive Filter Grid (replace your previous .filter-grid block) */
 .filter-grid {
-    display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(230px, 1fr));
-    gap:20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    align-items: end; /* align items so button sits at bottom */
 }
 
+/* Label + input styles */
 .filter-grid label {
-    font-weight:600;
-    font-size:14px;
-    color:#374151;
-    margin-bottom:6px;
-    display:block;
+    display: block;
+    font-weight: 600;
+    font-size: 14px;
+    color: #374151;
+    margin-bottom: 6px;
 }
 
-.filter-grid input {
-    width:100%;
-    padding:11px 13px;
-    font-size:15px;
-    border-radius:8px;
-    background:#f9fafb;
-    border:1px solid #d1d5db;
+.filter-grid input,
+.filter-grid select,
+.filter-grid textarea {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 15px;
+    border-radius: 8px;
+    background: #f9fafb;
+    border: 1px solid #d1d5db;
+    box-sizing: border-box;
 }
 
-/* APPLY BUTTON */
+/* Make the button cell align nicely */
+.filter-grid > div:last-child {
+    display: flex;
+    align-items: flex-end; /* anchor button to bottom of grid cell */
+    justify-content: flex-start;
+}
+
+/* Apply button */
 .apply-btn {
-    background:#2563eb;
-    color:white;
-    border:none;
-    padding:12px;
-    border-radius:8px;
-    font-weight:600;
-    width:100%;
-    cursor:pointer;
-    transition:.2s;
-    margin-top:30px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 11px 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .15s ease;
+    width: 160px; /* default width on larger screens */
 }
+.apply-btn:hover { background: #1d4ed8; }
+
+/* Make the apply button full-width on small screens */
+@media (max-width: 700px) {
+    .filter-grid {
+        grid-template-columns: 1fr; /* single column stack */
+        gap: 12px;
+        align-items: stretch;
+    }
+
+    .filter-grid > div:last-child {
+        justify-content: stretch;
+        align-items: stretch;
+    }
+
+    .apply-btn {
+        width: 100%;
+        padding: 12px;
+    }
+}
+
+/* Extra polish: reduce vertical spacing for compact screens */
+@media (max-width: 420px) {
+    .filter-grid label { font-size: 13px; }
+    .filter-grid input { padding: 9px 10px; font-size: 14px; }
+    .apply-btn { font-size: 15px; padding: 10px; }
+}
+
 .apply-btn:hover {
     background:#1d4ed8;
 }

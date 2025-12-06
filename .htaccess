@@ -1,0 +1,7 @@
+Options -Indexes
+RewriteEngine On
+
+RewriteBase /hc-epass-mvc/
+
+RewriteCond %{REQUEST_URI} !^/hc-epass-mvc/public/
+RewriteRule ^(.*)$ public/$1 [L]

@@ -1,0 +1,104 @@
+/* ACCESSIBILITY BAR */
+.accessibility-bar {
+    background: #000;
+    padding: 3px 10px;
+    text-align: right;
+}
+
+.accessibility-bar button {
+    padding: 2px 6px;
+    margin-left: 3px;
+    background: #fff;
+    border: 1px solid #333;
+    cursor: pointer;
+}
+
+.accessibility-bar .circle-btn {
+    border-radius: 50%;
+}
+
+/* TRI COLOR HEADER (COMPACT) */
+.tri-header {
+    width: 100%;
+    background: linear-gradient(to bottom, #ffb300, #ffffff 40%, #2e8b57);
+    text-align: center;
+    padding: 15px 0; /* smaller */
+    position: relative;
+    min-height: 100px; /* smaller */
+}
+
+.tri-header .ashoka {
+    height: 80px;   /* reduced from 130 */
+    top: 5px;
+    position: absolute;
+}
+
+.tri-header .left {
+    left: 20px;
+}
+
+.tri-header .right {
+    right: 20px;
+}
+
+.tri-header h1 {
+    margin: 0;
+    font-size: 32px; /* reduced */
+    font-weight: bold;
+}
+
+.tri-header .sub {
+    font-size: 16px; /* smaller */
+    margin-top: 2px;
+    font-weight: bold;
+}
+
+/* BLACK NAV BAR */
+.nav-black {
+    background: #000;
+    color: white;
+    padding: 8px 15px; /* smaller */
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.nav-black a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px; /* smaller */
+    margin-right: 12px;
+}
+
+.nav-black .menu-item {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.page-content {
+    padding: 16px;
+}
+
+/* RESPONSIVE */
+@media(max-width: 750px) {
+    .tri-header .ashoka {
+        height: 60px; /* smaller on mobile */
+    }
+    .tri-header h1 {
+        font-size: 24px;
+    }
+    .tri-header .sub {
+        font-size: 14px;
+    }
+}
+
+@media(max-width: 550px) {
+    .tri-header .left,
+    .tri-header .right {
+        display: none; /* hide side logos */
+    }
+    .tri-header {
+        padding: 20px 0;
+    }
+}

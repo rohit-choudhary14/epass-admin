@@ -16,8 +16,10 @@ class DashboardController extends BaseController
      *  from, to, passfor (S/L/ALL), adv (adv_enroll), cino, pass_no, page, perPage
      */
     public function index()
-    {
+    { 
+        
         $this->requireAuth();
+        $this->requireRole([2]);
 
         // filters from GET
         $from = isset($_GET['from']) && $_GET['from'] !== '' ? $_GET['from'] : null;

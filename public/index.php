@@ -7,48 +7,85 @@ $parts = explode('/', $route);
 $controller = $parts[0];
 $action = isset($parts[1]) ? $parts[1] : 'index';
 
-// map controllers
+// ROUTER
 switch ($controller) {
+
+    /* ===============================
+       AUTH CONTROLLER
+       =============================== */
     case 'auth':
         $c = new AuthController();
+
         if ($action === 'loginPost' && $_SERVER['REQUEST_METHOD'] === 'POST') $c->loginPost();
         elseif ($action === 'registerPost' && $_SERVER['REQUEST_METHOD'] === 'POST') $c->registerPost();
         elseif ($action === 'registerForm') $c->registerForm();
+        elseif ($action === 'registerOfficerForm') $c->registerOfficerForm();
+        elseif ($action === 'registerOfficerPost' && $_SERVER['REQUEST_METHOD'] === 'POST') $c->registerOfficerPost();
+        elseif ($action === 'userList') $c->userList();
         elseif ($action === 'logout') $c->logout();
         else $c->loginForm();
         break;
 
+
+    /* ===============================
+       ADMIN DASHBOARD
+       =============================== */
     case 'dashboard':
         $c = new DashboardController();
         $c->index();
         break;
 
-   case 'pass':
+
+    /* ===============================
+       OFFICER CONTROLLER
+       =============================== */
+    case 'officer':
+        $c = new OfficerController();
+
+        if ($action === 'dashboard') $c->dashboard();
+        else $c->dashboard();
+        break;
+
+
+    /* ===============================
+       PASS CONTROLLER
+       =============================== */
+
+   /* ===============================
+   PASS CONTROLLER
+   =============================== */
+case 'pass':
     $c = new PassController();
 
-    if ($action === 'list') {
-        $c->list();
-    }
-    elseif ($action === 'ajaxList') {
-        $c->ajaxList();
-    }
-    elseif ($action === 'view') {
-        $c->view();
-    }
-    elseif ($action === 'revoke' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        $c->revoke();
-    }
-    elseif ($action === 'exportCsv') {
-        $c->exportCsv();
-    }
-    else {
-        $c->list();
-    }
+    if ($action === 'list') $c->list();
+    elseif ($action === 'ajaxList') $c->ajaxList();
+    elseif ($action === 'view') $c->view();
+    elseif ($action === 'revoke' && $_SERVER['REQUEST_METHOD'] === 'POST') $c->revoke();
+    elseif ($action === 'exportCsv') $c->exportCsv();
+
+    // NEW ROUTES (ONLY ONE PASS BLOCK)
+    elseif ($action === 'generate') $c->generate();
+    elseif ($action === 'generateForm') $c->actionGenerateForm();
+    elseif ($action === 'courtForm') $c->actionCourtForm();
+    elseif ($action === 'searchCourtCase') $c->actionSearchCourtCase();
+    elseif ($action === 'generateCourt') $c->actionGenerateCourtPass();
+
+    elseif ($action === 'saveAdvocate') $c->actionSaveAdvocate();
+    elseif ($action === 'saveSrAdvocate') $c->actionSaveSrAdvocate();
+    elseif ($action === 'saveLitigant') $c->actionSaveLitigant();
+    elseif ($action === 'saveCourt') $c->actionSaveCourt();
+    elseif ($action === 'saveSection') $c->actionSaveSection();
+    elseif ($action === 'saveVendor') $c->actionSaveVendor();
+
+    else $c->list();
     break;
 
 
 
 
+    /* ===============================
+       DEFAULT
+       =============================== */
     default:
         $c = new AuthController();
         $c->loginForm();
