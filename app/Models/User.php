@@ -63,31 +63,49 @@ class User extends BaseModel
     public function getAllUsers()
     {
         $sql = "SELECT id, username, name, email, contact_num, role_id, status 
-            FROM gatepass_users   where role_id=10 ORDER BY id DESC";
+            FROM gatepass_users 
+            WHERE role_id = 10 
+            ORDER BY id DESC";
 
         $stmt = $this->pdo->query($sql);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $output = [];
+
+        foreach ($rows as $r) {
+            $output[] = [
+                'id'       => $r['id'],
+                'username' => $r['username'],
+                'name'     => $r['name'],
+                'email'    => $this->decryptData($r['email']),
+                'contact'  => $this->decryptData($r['contact_num']),
+                'type'     => $r['role_id'],
+                'status'   => $r['status']
+            ];
+        }
+
+        return $output;
     }
-   public function createOfficer($username, $name, $gender, $email, $contact, $password, $type)
-{
-    $sql = "INSERT INTO gatepass_users 
+
+    public function createOfficer($username, $name, $gender, $email, $contact, $password, $type)
+    {
+        $sql = "INSERT INTO gatepass_users 
             (username, name, gender, email, password, contact_num, address, status, ip, created, role_id)
             VALUES
             (:username, :name, :gender, :email, :password, :contact, '', 1, :ip, NOW(), :role_id)
             RETURNING id";
 
-    $stmt = $this->pdo->prepare($sql);
+        $stmt = $this->pdo->prepare($sql);
 
-    return $stmt->execute([
-        ':username' => $username,
-        ':name'     => $name,
-        ':gender'   => $gender,
-        ':email'    => $this->encryptData($email),
-        ':password' => $this->encryptData($password),
-        ':contact'  => $this->encryptData($contact),
-        ':ip'       => $_SERVER['REMOTE_ADDR'] ?? '',
-        ':role_id'  => 10
-    ]);
-}
-
+        return $stmt->execute([
+            ':username' => $username,
+            ':name'     => $name,
+            ':gender'   => $gender,
+            ':email'    => $this->encryptData($email),
+            ':password' => $this->encryptData($password),
+            ':contact'  => $this->encryptData($contact),
+            ':ip'       => $_SERVER['REMOTE_ADDR'] ?? '',
+            ':role_id'  => 10
+        ]);
+    }
 }

@@ -16,8 +16,8 @@ class DashboardController extends BaseController
      *  from, to, passfor (S/L/ALL), adv (adv_enroll), cino, pass_no, page, perPage
      */
     public function index()
-    { 
-        
+    {
+
         $this->requireAuth();
         $this->requireRole([2]);
 
@@ -28,7 +28,7 @@ class DashboardController extends BaseController
         $adv = isset($_GET['adv']) ? trim($_GET['adv']) : '';
         $cino = isset($_GET['cino']) ? trim($_GET['cino']) : '';
         $pass_no = isset($_GET['pass_no']) ? trim($_GET['pass_no']) : '';
-        $page = isset($_GET['page']) ? max(1,(int)$_GET['page']) : 1;
+        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
         $perPage = isset($_GET['perPage']) ? (int)$_GET['perPage'] : 25;
 
         // Stats
@@ -49,21 +49,31 @@ class DashboardController extends BaseController
 
         // recent / paginated table based on filters
         $rows = $this->passModel->filteredList([
-            'from'=>$from,'to'=>$to,'passfor'=>$passfor,'adv'=>$adv,'cino'=>$cino,'pass_no'=>$pass_no,
-            'page'=>$page,'perPage'=>$perPage
+            'from' => $from,
+            'to' => $to,
+            'passfor' => $passfor,
+            'adv' => $adv,
+            'cino' => $cino,
+            'pass_no' => $pass_no,
+            'page' => $page,
+            'perPage' => $perPage
         ]);
 
+        // Calculate total pages
+        $totalRows  = $rows['total'];
+        $totalPages = ceil($totalRows / $perPage);
         // pass vars to view
         view('dashboard/index', [
-            'stats'=>$stats,
-            'chart30'=>$chart30,
-            'byType'=>$byType,
-            'topAdv'=>$topAdv,
-            'rows'=>$rows['rows'],
-            'totalRows'=>$rows['total'],
-            'page'=>$rows['page'],
-            'perPage'=>$rows['perPage'],
-            'filters'=> ['from'=>$from,'to'=>$to,'passfor'=>$passfor,'adv'=>$adv,'cino'=>$cino,'pass_no'=>$pass_no]
+            'stats' => $stats,
+            'chart30' => $chart30,
+            'byType' => $byType,
+            'topAdv' => $topAdv,
+            'rows' => $rows['rows'],
+            'totalRows' => $rows['total'],
+            'page' => $rows['page'],
+            'perPage' => $rows['perPage'],
+            
+            'filters' => ['from' => $from, 'to' => $to, 'passfor' => $passfor, 'adv' => $adv, 'cino' => $cino, 'pass_no' => $pass_no]
         ]);
     }
 
@@ -93,7 +103,7 @@ class DashboardController extends BaseController
             echo json_encode($this->passModel->topAdvocates(10, $from, $to));
             exit;
         } else {
-            echo json_encode(['error'=>'unknown']);
+            echo json_encode(['error' => 'unknown']);
             exit;
         }
     }
@@ -114,15 +124,21 @@ class DashboardController extends BaseController
         $pass_no = isset($_GET['pass_no']) ? trim($_GET['pass_no']) : '';
 
         $data = $this->passModel->getFilteredRows([
-            'from'=>$from,'to'=>$to,'passfor'=>$passfor,'adv'=>$adv,'cino'=>$cino,'pass_no'=>$pass_no,
-            'page'=>1,'perPage'=>100000
+            'from' => $from,
+            'to' => $to,
+            'passfor' => $passfor,
+            'adv' => $adv,
+            'cino' => $cino,
+            'pass_no' => $pass_no,
+            'page' => 1,
+            'perPage' => 100000
         ]);
 
         header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename=passes_export_'.date('Ymd_His').'.csv');
+        header('Content-Disposition: attachment; filename=passes_export_' . date('Ymd_His') . '.csv');
 
-        $out = fopen('php://output','w');
-        fputcsv($out, ['ID','Pass No','Entry Date','Pass For','Pass Type','CINO','Adv Enroll','Court','Item','Address']);
+        $out = fopen('php://output', 'w');
+        fputcsv($out, ['ID', 'Pass No', 'Entry Date', 'Pass For', 'Pass Type', 'CINO', 'Adv Enroll', 'Court', 'Item', 'Address']);
         foreach ($data['rows'] as $r) {
             fputcsv($out, [
                 $r['id'],

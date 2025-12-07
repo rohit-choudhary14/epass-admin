@@ -1,13 +1,5 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
 
-<!-- DATATABLE CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
-
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-
 <style>
     body{
       padding: 0px !important;
@@ -96,16 +88,23 @@ h2 {
                     <td><?= htmlspecialchars($u['name']) ?></td>
 
                     <td>
-                        <?php if($u['type'] == 1): ?>
-                            <span style="color:green;font-weight:600;">Admin</span>
-                        <?php elseif($u['type'] == 10): ?>
-                            <span style="color:#2563eb;font-weight:600;">Officer</span>
-                        <?php endif; ?>
-                    </td>
+    <?php 
+        $type = $u['type'] ?? null;
+        if ($type == 1) {
+            echo '<span style="color:green;font-weight:600;">Admin</span>';
+        } elseif ($type == 10) {
+            echo '<span style="color:#2563eb;font-weight:600;">Officer</span>';
+        } else {
+            echo '<span style="color:gray;">Unknown</span>';
+        }
+    ?>
+</td>
 
-                    <td><?= htmlspecialchars($u['email']) ?></td>
-                    <td><?= htmlspecialchars($u['contact']) ?></td>
-                    <td><?= $u['status'] ? 'Active' : 'Inactive' ?></td>
+<td><?= htmlspecialchars($u['email'] ?? '—') ?></td>
+<td><?= htmlspecialchars($u['contact'] ?? '—') ?></td>
+
+<td><?= ($u['status'] ?? 0) ? 'Active' : 'Inactive' ?></td>
+
 
                     <td>
                         <a class="edit-link" href="/HC-EPASS-MVC/public/index.php?r=auth/editUser&id=<?= $u['id'] ?>">Edit</a>

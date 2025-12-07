@@ -6,3 +6,12 @@ SQLSTATE[08006] [7] fe_sendauth: no password supplied
 SQLSTATE[08006] [7] fe_sendauth: no password supplied
 SQLSTATE[08006] [7] fe_sendauth: no password supplied
 SQLSTATE[08006] [7] fe_sendauth: no password supplied
+SQLSTATE[08006] [7] could not connect to server: Connection timed out (0x0000274C/10060)
+	Is the server running on host "10.130.8.95" and accepting
+	TCP/IP connections on port 5432?
+SQLSTATE[08006] [7] could not connect to server: Connection timed out (0x0000274C/10060)
+	Is the server running on host "10.130.8.95" and accepting
+	TCP/IP connections on port 5432?
+SQLSTATE[08006] [7] could not connect to server: Connection timed out (0x0000274C/10060)
+	Is the server running on host "10.130.8.95" and accepting
+	TCP/IP connections on port 5432?

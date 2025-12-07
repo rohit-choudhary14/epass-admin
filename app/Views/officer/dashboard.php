@@ -1,153 +1,172 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
 
 <style>
-    body {
-        padding: 0px !important;
-        margin: 0px !important;
-        font-family: Arial, sans-serif;
-    }
+/* GLOBAL */
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Inter", Arial, sans-serif;
+    background: #f3f4f6;
+}
 
-    .officer-container {
-        max-width: 1250px;
-        margin: 25px auto;
-        padding: 25px;
-    }
+/* WRAPPER */
+.officer-container {
+     font-family: "Inter", sans-serif;
+    max-width: 1250px;
+    margin: 26px auto;
+    padding: 20px;
+}
 
-    /* TITLE */
-    .officer-container h2 {
-        font-size: 30px;
-        font-weight: 700;
-        margin-bottom: 25px;
-        color: #111827;
-    }
+/* TITLE */
+.page-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 25px;
+    text-align: left;
+}
 
-    /* GRID OF CARDS */
-    .dashboard-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 25px;
-    }
+/* GRID BUTTONS */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 28px;
+}
 
-    /* BOX STYLE */
+.dashboard-card {
+    background: white;
+    border-radius: 14px;
+    padding: 30px 20px;
+    border: 1px solid #e5e7eb;
+    text-align: center;
+    cursor: pointer;
+    transition: .25s ease-in-out;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+}
+
+.dashboard-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 26px rgba(0,0,0,0.12);
+}
+
+.dashboard-card h3 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #2563eb;
+    margin-bottom: 10px;
+}
+
+.dashboard-card p {
+    font-size: 15px;
+    color: #475569;
+}
+
+/* SEARCH BOX */
+.search-box {
+    margin-top: 40px;
+    background: white;
+    border-radius: 14px;
+    padding: 26px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+}
+
+.search-box h3 {
+    margin-bottom: 15px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    background: #f9fafb;
+    transition: .2s ease;
+}
+
+.search-box input:focus {
+    border-color: #2563eb;
+    outline: none;
+    background: white;
+}
+
+.search-btn {
+    margin-top: 16px;
+    background: #2563eb;
+    color: white;
+    padding: 14px;
+    border: none;
+    width: 100%;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .25s ease;
+}
+
+.search-btn:hover {
+    background: #1d4ed8;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37,99,235,0.25);
+}
+
+/* PROFILE BOX */
+.profile-box {
+    margin-top: 40px;
+    background: white;
+    padding: 20px 24px;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+}
+
+.profile-box p {
+    font-size: 16px;
+    margin: 6px 0;
+    color: #334155;
+}
+
+.profile-box b {
+    color: #111827;
+}
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 768px) {
+    .page-title { font-size: 26px; }
+
     .dashboard-card {
-        background: white;
-        border-radius: 14px;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+        padding: 22px 18px;
+    }
+
+    .search-box, .profile-box {
         padding: 20px;
-        text-align: center;
-        cursor: pointer;
-        transition: .2s ease;
     }
-
-    .dashboard-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 5px 18px rgba(0, 0, 0, 0.12);
-    }
-
-    .dashboard-card h3 {
-        font-size: 20px;
-        font-weight: 700;
-        margin-bottom: 12px;
-        color: #2563eb;
-    }
-
-    .dashboard-card p {
-        font-size: 15px;
-        color: #374151;
-    }
-
-    /* SEARCH BAR */
-    .search-box {
-        margin-top: 40px;
-        background: white;
-        border-radius: 12px;
-        padding: 20px;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    }
-
-    .search-box h3 {
-        margin-bottom: 15px;
-        font-size: 22px;
-    }
-
-    .search-box input {
-        width: 100%;
-        padding: 11px 13px;
-        font-size: 16px;
-        border-radius: 8px;
-        border: 1px solid #d1d5db;
-        background: #f9fafb;
-    }
-
-    .search-btn {
-        margin-top: 15px;
-        background: #2563eb;
-        color: white;
-        padding: 12px;
-        border: none;
-        width: 100%;
-        border-radius: 8px;
-        font-size: 16px;
-        cursor: pointer;
-    }
-
-    .search-btn:hover {
-        background: #1d4ed8;
-    }
-
-    /* PROFILE BOX */
-    .profile-box {
-        margin-top: 35px;
-        background: #ffffffcc;
-        padding: 20px;
-        border-radius: 10px;
-        border: 1px solid #e5e7eb;
-    }
-
-    .profile-box b {
-        color: #111827;
-    }
+}
 </style>
+
+
 
 <div class="officer-container">
 
-    <!-- <h2>Officer Dashboard</h2> -->
+    <h2 class="page-title">Officer Dashboard</h2>
 
     <!-- GRID BUTTONS -->
     <div class="dashboard-grid">
 
         <div class="dashboard-card" onclick="window.location.href='/HC-EPASS-MVC/public/index.php?r=pass/generate&type=advocate';">
             <h3>Advocate Pass</h3>
-            <p>Generate pass for Advocate</p>
+            <p>Generate pass for advocates</p>
         </div>
-
-        <!-- <div class="dashboard-card" onclick="window.location.href='/HC-EPASS-MVC/public/index.php?r=pass/generate&type=sr_advocate';">
-            <h3>Senior Advocate</h3>
-            <p>Generate pass for Senior Advocate</p>
-        </div> -->
 
         <div class="dashboard-card" onclick="window.location.href='/HC-EPASS-MVC/public/index.php?r=pass/generate&type=litigant';">
             <h3>Litigant Pass</h3>
             <p>Generate pass for litigants</p>
         </div>
-
-        <!-- <div class="dashboard-card" onclick="window.location.href='/HC-EPASS-MVC/public/index.php?r=pass/generate&type=court';">
-            <h3>Court Pass</h3>
-            <p>For courtrooms, items & dates</p>
-        </div>
-
-        <div class="dashboard-card" onclick="window.location.href='/HC-EPASS-MVC/public/index.php?r=pass/generate&type=section';">
-            <h3>Section Pass</h3>
-            <p>Generate pass for office sections</p>
-        </div>
-
-        <div class="dashboard-card" onclick="window.location.href='/HC-EPASS-MVC/public/index.php?r=pass/generate&type=vendor';">
-            <h3>Vendor Pass</h3>
-            <p>Pass for vendors & workers</p>
-        </div> -->
-
     </div>
 
     <!-- SEARCH BLOCK -->
@@ -162,11 +181,13 @@
 
     <!-- PROFILE INFO -->
     <div class="profile-box">
-        <p><b>Officer:</b> <?= htmlspecialchars($_SESSION['admin_user']['name']) ?></p>
-        <p><b>Role:</b> <?= htmlspecialchars($_SESSION['admin_user']['role']) ?></p>
-        <p><b>Department:</b> <?= htmlspecialchars($_SESSION['admin_user']['department']) ?></p>
+        <p><b>Officer:</b> <?= htmlspecialchars($_SESSION['admin_user']['name'] ?? 'N/A') ?></p>
+        <p><b>Role:</b> <?= htmlspecialchars($_SESSION['admin_user']['role'] ?? 'N/A') ?></p>
+        <p><b>Department:</b> <?= htmlspecialchars($_SESSION['admin_user']['department'] ?? 'N/A') ?></p>
     </div>
 
 </div>
+
+
 
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

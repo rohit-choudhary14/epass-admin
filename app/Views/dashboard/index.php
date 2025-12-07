@@ -1,5 +1,6 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
 
+
 <style>
     /* GLOBAL */
     body {
@@ -479,17 +480,19 @@
 
             <!-- Pagination -->
             <div class="pagination">
+                <!-- kdfjd
                 <?php if ($page > 1): ?>
                     <a href="<?php echo $this->buildPageUrl($page - 1); ?>">Prev</a>
                 <?php endif; ?>
                 <?php if ($page < $totalPages): ?>
                     <a href="<?php echo $this->buildPageUrl($page + 1); ?>">Next</a>
-                <?php endif; ?>
+                <?php endif; ?> -->
             </div>
 
         </div>
     </div>
 </div>
+
 <script>
     (function() {
         /* ---------- Dark mode persisted ---------- */

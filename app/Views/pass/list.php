@@ -1,10 +1,4 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
-
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 
 <style>
 body {
@@ -183,15 +177,18 @@ h2 {
 
     <tbody>
         <?php if(!empty($list)): foreach($list as $r): ?>
-        <tr>
-            <td><?= $r['id'] ?></td>
-            <td><?= $r['pass_no'] ?></td>
-            <td><?= $r['entry_dt'] ?></td>
-            <td><?= $r['passfor'] ?></td>
-            <td><?= $r['adv_enroll'] ?></td>
-            <td><?= $r['court_no'] ?>/<?= $r['item_no'] ?></td>
-            <td><a class="view-link" href="index.php?r=pass/view&id=<?= $r['id'] ?>">View</a></td>
-        </tr>
+       <tr>
+    <td><?= $r['id'] ?></td>
+    <td><?= $r['pass_no'] ?></td>
+    <td><?= $r['entry_dt'] ?></td>
+    <td><?= $r['passfor'] ?></td>
+    <td><?= htmlspecialchars($r['adv_enroll'] ?? '—') ?></td>
+    <td>
+        <?= htmlspecialchars($r['court_no'] ?? '—') ?>/<?= htmlspecialchars($r['item_no'] ?? '—') ?>
+    </td>
+    <td><a class="view-link" href="index.php?r=pass/view&id=<?= $r['id'] ?>">View</a></td>
+</tr>
+
         <?php endforeach; endif; ?>
     </tbody>
 </table>

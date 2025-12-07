@@ -1,24 +1,21 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
-
-<!-- Bootstrap 5 CSS (CDN) -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
 <style>
-    :root{
+    :root {
         --bg: #eef1f7;
         --card: #ffffff;
         --text: #1b3a57;
         --muted: #6c757d;
         --accent: #0d6efd;
     }
-    body{
+
+    body {
         background: var(--bg);
         font-family: "Inter", "Segoe UI", sans-serif;
         color: var(--text);
         /* padding: 20px; */
         transition: background .25s, color .25s;
-         margin: 0 !important;
-    padding: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     /* Dark mode */
@@ -37,11 +34,11 @@
         padding: 28px;
         border-radius: 14px;
         position: relative;
-        box-shadow: 0 6px 26px rgba(17,24,39,0.12);
+        box-shadow: 0 6px 26px rgba(17, 24, 39, 0.12);
     }
 
     /* Seal watermark */
-    .pass-wrapper::before{
+    .pass-wrapper::before {
         content: "";
         position: absolute;
         inset: 0;
@@ -56,48 +53,57 @@
     }
 
     .header-row {
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
     }
 
     .header-left h2 {
-        margin:0;
-        font-weight:800;
-        font-size:26px;
+        margin: 0;
+        font-weight: 800;
+        font-size: 26px;
     }
 
     .meta-badges .badge {
-        font-weight:700;
+        font-weight: 700;
     }
 
     .details-grid {
-        margin-top:18px;
+        margin-top: 18px;
     }
 
-    .detail-label { color: var(--muted); font-weight:700; }
-    .detail-value { font-weight:600; color:var(--text); }
+    .detail-label {
+        color: var(--muted);
+        font-weight: 700;
+    }
+
+    .detail-value {
+        font-weight: 600;
+        color: var(--text);
+    }
 
     .photo {
-        width:110px;
-        height:110px;
-        border-radius:10px;
-        object-fit:cover;
-        border: 2px solid rgba(0,0,0,0.06);
+        width: 110px;
+        height: 110px;
+        border-radius: 10px;
+        object-fit: cover;
+        border: 2px solid rgba(0, 0, 0, 0.06);
         background: #f6f8fb;
     }
 
     /* timeline */
     .timeline {
-        border-left: 3px solid rgba(13,110,253,0.12);
+        border-left: 3px solid rgba(13, 110, 253, 0.12);
         padding-left: 18px;
         margin-top: 10px;
     }
+
     .timeline-item {
         margin-bottom: 14px;
         position: relative;
     }
+
     .timeline-item::before {
         content: "";
         position: absolute;
@@ -107,30 +113,50 @@
         height: 12px;
         background: var(--accent);
         border-radius: 50%;
-        box-shadow: 0 0 0 4px rgba(13,110,253,0.08);
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.08);
     }
 
     /* signature */
     .sig-pad {
-        border: 1px dashed rgba(0,0,0,0.12);
-        border-radius:8px;
-        background: rgba(255,255,255,0.02);
+        border: 1px dashed rgba(0, 0, 0, 0.12);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.02);
         touch-action: none;
     }
 
     /* actions area */
-    .actions { margin-top:18px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+    .actions {
+        margin-top: 18px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
 
     /* print hide controls */
     @media print {
-        .no-print { display:none !important; }
-        .pass-wrapper { box-shadow:none; border-radius:0; }
+        .no-print {
+            display: none !important;
+        }
+
+        .pass-wrapper {
+            box-shadow: none;
+            border-radius: 0;
+        }
     }
 
     /* responsive tweaks */
-    @media (max-width:720px){
-        .header-row { flex-direction:column; align-items:flex-start; gap:10px; }
-        .photo { width:90px; height:90px; }
+    @media (max-width:720px) {
+        .header-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .photo {
+            width: 90px;
+            height: 90px;
+        }
     }
 </style>
 
@@ -144,26 +170,30 @@
                 <div class="meta-badges mt-2">
                     <!-- Status badge -->
                     <?php
-                        // determine status
-                        $today = new DateTimeImmutable('now', new DateTimeZone('Asia/Kolkata'));
-                        $status = $p['status'] ?? null;
-                        // if valid_till provided, compute status
-                        if (!$status && !empty($p['valid_till'])) {
-                            try {
-                                $vt = new DateTimeImmutable($p['valid_till']);
-                                $status = ($vt >= $today) ? 'Active' : 'Expired';
-                            } catch(Exception $e) { $status = 'Unknown'; }
+                    // determine status
+                    $today = new DateTimeImmutable('now', new DateTimeZone('Asia/Kolkata'));
+                    $status = $p['status'] ?? null;
+                    // if valid_till provided, compute status
+                    if (!$status && !empty($p['valid_till'])) {
+                        try {
+                            $vt = new DateTimeImmutable($p['valid_till']);
+                            $status = ($vt >= $today) ? 'Active' : 'Expired';
+                        } catch (Exception $e) {
+                            $status = 'Unknown';
                         }
-                        if (!$status && !empty($p['entry_dt'])) {
-                            // fallback: active if entry date >= today-1
-                            try {
-                                $ed = new DateTimeImmutable($p['entry_dt']);
-                                $interval = $today->diff($ed)->days;
-                                $status = ($ed <= $today) ? 'Active' : 'Active';
-                            } catch(Exception $e){ $status = 'Unknown'; }
+                    }
+                    if (!$status && !empty($p['entry_dt'])) {
+                        // fallback: active if entry date >= today-1
+                        try {
+                            $ed = new DateTimeImmutable($p['entry_dt']);
+                            $interval = $today->diff($ed)->days;
+                            $status = ($ed <= $today) ? 'Active' : 'Active';
+                        } catch (Exception $e) {
+                            $status = 'Unknown';
                         }
-                        $status = $status ?? 'Unknown';
-                        $badgeClass = ($status === 'Active') ? 'bg-success text-white' : (($status === 'Expired') ? 'bg-danger text-white' : 'bg-secondary text-white');
+                    }
+                    $status = $status ?? 'Unknown';
+                    $badgeClass = ($status === 'Active') ? 'bg-success text-white' : (($status === 'Expired') ? 'bg-danger text-white' : 'bg-secondary text-white');
                     ?>
                     <span class="badge <?php echo $badgeClass; ?>"><?php echo htmlspecialchars($status); ?></span>
 
@@ -179,7 +209,7 @@
             <div class="header-right d-flex align-items-center gap-3">
                 <!-- Photo -->
                 <?php
-                    // $photo = $p['photo_url'] ?? '/HC-EPASS-MVC/public/assets/images/placeholder.png';
+                // $photo = $p['photo_url'] ?? '/HC-EPASS-MVC/public/assets/images/placeholder.png';
                 $photo = $p['photo_url'] ?? "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAMAAACahl6sAAAAIVBMVEUAAP8AAAD/AAD///8A/wD//wAA//8A/wD/AAD//wAAAP8A/wB6wVdcAAABzUlEQVR4nO3aTU7DMBiF4eAYmP//mw7CDBXUilX8WZHhpT2BEuqif2BqyS2AATfcPAfgC3a7PznXfiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiY2KW3AOy5p7RnNsZo/G8PRZz0JzoV8j2xn+Fa3p64vCFAHNDaHfAz7bgL8EaPYNx3+0EvgFatgL3H2oIuAtbbDa0k08IY3gWWMRtHPmFljEbQz5hZYxG0M+YWZiadjF6O5ws8Gw6Yfg8Gx+DeeBz4LB8HnWgPkHsGdbAfkedB7BHWgPVDfK/HcV4LpmF2Kzxj5BM24vgjjF8A/wQgONuCeMSwB8BGA4G4J4xPAHME4DsCeMfwHwA4Dcb4h4xHAHwQYPgbgnjEcAfBBg+BvD1Y/4GIFp8TjNgbruvUTk4lnEpZZm4l5PrVDLUV75tLgvSq4B7L6+IGivYhyIfl8Go1OfhvD6hxU4/QxOH7nkVN8B6n/texg2pAbmPT4/HPdHp8x2biYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYn5F7xC/qLvRVKbAAAAAElFTkSuQmCC";
 
                 ?>
@@ -187,8 +217,8 @@
 
                 <!-- QR (generate from pass public URL or pass id) -->
                 <?php
-                    $passUrl = $p['public_url'] ?? ("https://example.com/pass/view?id=" . urlencode($p['id'] ?? ''));
-                    $qrUrl = "https://chart.googleapis.com/chart?cht=qr&chs=220x220&chl=" . rawurlencode($passUrl);
+                $passUrl = $p['public_url'] ?? ("https://example.com/pass/view?id=" . urlencode($p['id'] ?? ''));
+                $qrUrl = "https://chart.googleapis.com/chart?cht=qr&chs=220x220&chl=" . rawurlencode($passUrl);
                 ?>
                 <img alt="QR" style="width:86px;height:86px;border-radius:8px;" src="<?php echo $qrUrl; ?>">
             </div>
@@ -256,24 +286,24 @@
                         <h6 class="mb-2">Timeline</h6>
                         <div class="timeline" id="timeline">
                             <?php
-                                // example timeline structure: $p['timeline'] = [
-                                //   ['label'=>'Created','by'=>'System','dt'=>'2025-05-01 10:12','note'=>'...'],
-                                // ];
-                                $timeline = $p['timeline'] ?? null;
-                                if (!$timeline) {
-                                    // provide safe defaults
-                                    $timeline = [
-                                        ['label'=>'Pass Requested','by'=>'User','dt'=>($p['entry_dt_str'] ?? date('Y-m-d')), 'note'=>'Request received'],
-                                        ['label'=>'Approved','by'=>'Admin','dt'=>($p['entry_dt_str'] ?? date('Y-m-d')), 'note'=>'Approved by gate control'],
-                                    ];
-                                }
-                                foreach($timeline as $t){
-                                    $tlabel = htmlspecialchars($t['label'] ?? 'Event');
-                                    $tby = htmlspecialchars($t['by'] ?? '');
-                                    $tdt = htmlspecialchars($t['dt'] ?? '');
-                                    $tnote = htmlspecialchars($t['note'] ?? '');
-                                    echo "<div class=\"timeline-item\"><div><strong>{$tlabel}</strong> <small class=\"text-muted\">by {$tby}</small></div><div class=\"text-muted small\">{$tdt}</div><div class=\"small mt-1\">{$tnote}</div></div>";
-                                }
+                            // example timeline structure: $p['timeline'] = [
+                            //   ['label'=>'Created','by'=>'System','dt'=>'2025-05-01 10:12','note'=>'...'],
+                            // ];
+                            $timeline = $p['timeline'] ?? null;
+                            if (!$timeline) {
+                                // provide safe defaults
+                                $timeline = [
+                                    ['label' => 'Pass Requested', 'by' => 'User', 'dt' => ($p['entry_dt_str'] ?? date('Y-m-d')), 'note' => 'Request received'],
+                                    ['label' => 'Approved', 'by' => 'Admin', 'dt' => ($p['entry_dt_str'] ?? date('Y-m-d')), 'note' => 'Approved by gate control'],
+                                ];
+                            }
+                            foreach ($timeline as $t) {
+                                $tlabel = htmlspecialchars($t['label'] ?? 'Event');
+                                $tby = htmlspecialchars($t['by'] ?? '');
+                                $tdt = htmlspecialchars($t['dt'] ?? '');
+                                $tnote = htmlspecialchars($t['note'] ?? '');
+                                echo "<div class=\"timeline-item\"><div><strong>{$tlabel}</strong> <small class=\"text-muted\">by {$tby}</small></div><div class=\"text-muted small\">{$tdt}</div><div class=\"small mt-1\">{$tnote}</div></div>";
+                            }
                             ?>
                         </div>
                     </div>
@@ -313,7 +343,7 @@
         <div class="actions no-print">
             <button onclick="window.print()" class="btn btn-dark">🖨 Print</button>
             <a href="/HC-EPASS-MVC/public/index.php?r=pass/pdf&id=<?php echo rawurlencode($p['id'] ?? ''); ?>"
-               class="btn btn-danger">⬇ PDF</a>
+                class="btn btn-danger">⬇ PDF</a>
             <a href="/HC-EPASS-MVC/public/index.php?r=pass/list" class="btn btn-outline-primary">← Back to List</a>
         </div>
 
@@ -323,11 +353,11 @@
 <!-- JS: signature pad + dark toggle -->
 <script>
     // Dark mode toggle (persist in localStorage)
-    (function(){
+    (function() {
         const btn = document.getElementById('darkToggle');
         const root = document.body;
         const saved = localStorage.getItem('hc_epass_dark') === '1';
-        if(saved) root.classList.add('dark');
+        if (saved) root.classList.add('dark');
         btn.addEventListener('click', () => {
             root.classList.toggle('dark');
             localStorage.setItem('hc_epass_dark', root.classList.contains('dark') ? '1' : '0');
@@ -338,11 +368,14 @@
     })();
 
     // Signature pad (simple)
-    (function(){
+    (function() {
         const canvas = document.getElementById('sigCanvas');
         const ctx = canvas.getContext('2d');
         let drawing = false;
-        let last = {x:0,y:0};
+        let last = {
+            x: 0,
+            y: 0
+        };
 
         function resizeCanvas() {
             // maintain crispness for printing: use CSS size but keep internal resolution
@@ -362,7 +395,7 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        function p(e){
+        function p(e) {
             const rect = canvas.getBoundingClientRect();
             return {
                 x: (e.touches ? e.touches[0].clientX : e.clientX) - rect.left,
@@ -370,12 +403,12 @@
             };
         }
 
-        canvas.addEventListener('pointerdown', function(evt){
+        canvas.addEventListener('pointerdown', function(evt) {
             drawing = true;
             last = p(evt);
         });
-        canvas.addEventListener('pointermove', function(evt){
-            if(!drawing) return;
+        canvas.addEventListener('pointermove', function(evt) {
+            if (!drawing) return;
             const pt = p(evt);
             ctx.beginPath();
             ctx.moveTo(last.x, last.y);
@@ -383,16 +416,16 @@
             ctx.stroke();
             last = pt;
         });
-        ['pointerup','pointercancel','pointerleave'].forEach(ev => {
-            canvas.addEventListener(ev, ()=> drawing = false);
+        ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => {
+            canvas.addEventListener(ev, () => drawing = false);
         });
 
         // buttons
-        document.getElementById('sigClear').addEventListener('click', function(){
-            ctx.clearRect(0,0,canvas.width,canvas.height);
+        document.getElementById('sigClear').addEventListener('click', function() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
         });
 
-        document.getElementById('sigDownload').addEventListener('click', function(){
+        document.getElementById('sigDownload').addEventListener('click', function() {
             // convert to PNG and download
             const dataUrl = canvas.toDataURL('image/png');
             const a = document.createElement('a');
@@ -403,14 +436,14 @@
             a.remove();
         });
 
-        document.getElementById('sigFillSample').addEventListener('click', function(){
+        document.getElementById('sigFillSample').addEventListener('click', function() {
             // simple sample stroke
-            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.beginPath();
-            ctx.moveTo(20,90);
-            ctx.quadraticCurveTo(120,10,260,80);
-            ctx.moveTo(260,80);
-            ctx.quadraticCurveTo(340,120,410,60);
+            ctx.moveTo(20, 90);
+            ctx.quadraticCurveTo(120, 10, 260, 80);
+            ctx.moveTo(260, 80);
+            ctx.quadraticCurveTo(340, 120, 410, 60);
             ctx.stroke();
         });
 
