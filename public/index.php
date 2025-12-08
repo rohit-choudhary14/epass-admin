@@ -69,11 +69,13 @@ case 'pass':
     elseif ($action === 'courtForm') $c->actionCourtForm();
     elseif ($action === 'searchCourtCase') $c->actionSearchCourtCase();
     elseif ($action === 'generateCourt') $c->actionGenerateCourtPass();
+     elseif ($action === 'generateCourtLitigant') $c->actionGenerateCourtPassLitigant();
     elseif ($action === 'myPasses') $c->actionMyPasses();
     elseif ($action === 'mySectionPasses') $c->mySectionPasses();
     elseif ($action === 'printSection') $c->printSection();
     elseif ($action === 'downloadPdf') $c->actionDownloadPdf();
     elseif ($action === 'saveAdvocateSection') $c->actionSaveAdvocateSection();
+    elseif ($action === 'saveLitigantSection') $c->actionSaveLitigantSection();
     elseif ($action === 'viewSection') $c->viewSection();
 
 

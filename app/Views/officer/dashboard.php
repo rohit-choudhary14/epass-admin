@@ -167,6 +167,10 @@ body {
             <h3>Litigant Pass</h3>
             <p>Generate pass for litigants</p>
         </div>
+         <div class="dashboard-card" onclick="window.location.href='/HC-EPASS-MVC/public/index.php?r=pass/generate&type=partyinperson';">
+            <h3>Party In Person</h3>
+            <p>Generate pass for Party in person</p>
+        </div>
     </div>
 
     <!-- SEARCH BLOCK -->

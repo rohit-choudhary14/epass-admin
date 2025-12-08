@@ -500,4 +500,36 @@ class Pass extends BaseModel
 
         return $stmt->fetchColumn();
     }
+
+
+    public function saveLitigantSectionRaw($data)
+    {
+        $sql = "INSERT INTO gatepass_details_section
+            (pass_no, pass_dt, adv_cd, enroll_no, userid, userip, 
+             purpose_of_visit, purposermks, entry_dt, passfor, passtype,litigantname,litigantmobile,litigant_address)
+            VALUES 
+            (:pass_no, :pass_dt, :adv_cd, :enroll_no, :userid, :userip,
+             :purpose_of_visit, :purposermks, NOW(), :passfor, :passtype,:litigantname,:litigantmobile,:litigant_address)
+            RETURNING id";
+
+        $stmt = $this->pdo->prepare($sql);
+
+        $stmt->execute([
+            ":pass_no"          => $data["pass_no"],
+            ":pass_dt"          => $data["pass_dt"],
+            ":adv_cd"           => $data["adv_cd"],
+            ":enroll_no"        => $data["adv_enroll"],
+            ":userid"           => $data["userid"],
+            ":userip"           => $data["userip"],
+            ":purpose_of_visit" => $data["purpose_ids"],
+            ":purposermks"      => $data["remarks"], 
+            ":passfor"          => $data["passfor"],
+            ":passtype"         => $data["passtype"],
+            ":litigantname"     => $data["litigantname"],
+            ":litigantmobile"   => $data["litigantmobile"],
+            ":litigant_address" => $data["litigant_address"]
+        ]);
+
+        return $stmt->fetchColumn();
+    }
 }
