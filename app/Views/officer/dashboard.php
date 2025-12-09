@@ -4,18 +4,21 @@
     * {
         box-sizing: border-box;
     }
+
     body {
         margin: 0;
         padding: 0;
         font-family: "Inter", Arial, sans-serif;
         background: #f3f4f6;
     }
+
     .officer-container {
         font-family: "Inter", sans-serif;
         max-width: 1250px;
         margin: 26px auto;
         padding: 20px;
     }
+
     .page-title {
         font-size: 32px;
         font-weight: 800;
@@ -23,11 +26,13 @@
         margin-bottom: 25px;
         text-align: left;
     }
+
     .dashboard-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         gap: 28px;
     }
+
     .dashboard-card {
         background: white;
         border-radius: 14px;
@@ -38,20 +43,24 @@
         transition: .25s ease-in-out;
         box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
     }
+
     .dashboard-card:hover {
         transform: translateY(-6px);
         box-shadow: 0 8px 26px rgba(0, 0, 0, 0.12);
     }
+
     .dashboard-card h3 {
         font-size: 22px;
         font-weight: 700;
         color: #2563eb;
         margin-bottom: 10px;
     }
+
     .dashboard-card p {
         font-size: 15px;
         color: #475569;
     }
+
     .search-box {
         margin-top: 40px;
         background: white;
@@ -145,7 +154,19 @@
 
 <div class="officer-container">
 
-    <h2 class="page-title">Officer Dashboard</h2>
+    <?php
+    $map = [
+        "P" => "Jodhpur",
+        "B" => "Jaipur"
+    ];
+
+    $est = $_SESSION['admin_user']['establishment'] ?? '';
+    $est = trim($est);
+
+    $estName = $map[$est] ?? "N/A";
+    ?>
+
+    <h2 class="page-title">Officer Dashboard (<?= $estName ?>)</h2>
 
     <!-- GRID BUTTONS -->
     <div class="dashboard-grid">
@@ -162,6 +183,10 @@
         <div class="dashboard-card" onclick="window.location.href='/HC-EPASS-MVC/public/index.php?r=pass/generate&type=partyinperson';">
             <h3>Party In Person</h3>
             <p>Generate pass for Party in person</p>
+        </div>
+         <div class="dashboard-card" onclick="window.location.href='/HC-EPASS-MVC/public/index.php?r=pass/generate&type=partyinperson';">
+            <h3>Vendor Pass</h3>
+            <p>Generate pass for Vendor</p>
         </div>
     </div>
 

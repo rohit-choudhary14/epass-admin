@@ -163,6 +163,9 @@
                                     case 'LS':
                                         $passForLabel = 'Litigant Section';
                                         break;
+                                    case 'PS':
+                                        $passForLabel = 'PIP Section';
+                                        break;
                                     case 'S':
                                         $passForLabel = 'Advocate Section';
                                         break;

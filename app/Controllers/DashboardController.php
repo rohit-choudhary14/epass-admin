@@ -19,7 +19,7 @@ class DashboardController extends BaseController
     {
 
         $this->requireAuth();
-        $this->requireRole([2]);
+        $this->requireRole([20]);
 
         // filters from GET
         $from = isset($_GET['from']) && $_GET['from'] !== '' ? $_GET['from'] : null;

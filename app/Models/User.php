@@ -8,7 +8,7 @@ class User extends BaseModel
     {
         $sql = "SELECT id, role_id, name, status, password, enroll_num, adv_code, contact_num, passtype, username, loginattempt, block, oldestpwd, oldpwd, estt, created
                 FROM gatepass_users
-                WHERE (status IS NOT NULL AND status <> '2') AND lower(username) = lower(:u)
+                WHERE (status IS NOT NULL AND status <> '20') AND lower(username) = lower(:u)
                 LIMIT 1";
         try {
             $stmt = $this->pdo->prepare($sql);
@@ -21,7 +21,7 @@ class User extends BaseModel
         }
     }
 
-    // create admin user (role_id = 2, passtype = 3) — uses encryption for email/contact/password
+    // create admin user (role_id = 20, passtype = 3) — uses encryption for email/contact/password
     public function createAdmin(array $data)
     {
         $sql = "INSERT INTO gatepass_users
@@ -38,7 +38,7 @@ class User extends BaseModel
             ':contact_num' => $this->encryptData($data['contact']),
             ':status' => 1,
             ':ip' => $_SERVER['REMOTE_ADDR'] ?? '',
-            ':role_id' => 2,     // admin role as requested
+            ':role_id' => 20,     // admin role as requested
             ':dob' => $data['dob'] ?? null,
             ':address' => $data['address'] ?? '',
             ':state' => $data['state'] ?? 0,

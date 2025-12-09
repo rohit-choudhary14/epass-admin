@@ -13,7 +13,7 @@ class PassController extends BaseController
     public function list()
     {
         $this->requireAuth();
-        $this->requireRole([2]);
+        $this->requireRole([20]);
 
         // FIX: Show ALL passes by default
         $from = isset($_GET['from']) && $_GET['from'] !== '' ? $_GET['from'] : '2000-01-01';
@@ -31,7 +31,7 @@ class PassController extends BaseController
     public function view()
     {
         $this->requireAuth();
-        $this->requireRole([2]);
+        $this->requireRole([20]);
 
         if (!isset($_GET['id'])) {
             echo "Missing ID";
@@ -51,7 +51,7 @@ class PassController extends BaseController
     public function ajaxList()
     {
         $this->requireAuth();
-        $this->requireRole([2]);
+        $this->requireRole([20]);
 
         $opts = [
             'from'    => $_GET['from'] ?? null,
@@ -74,7 +74,7 @@ class PassController extends BaseController
     public function exportCsv()
     {
         $this->requireAuth();
-        $this->requireRole([2]);
+        $this->requireRole([20]);
 
         $opts = [
             'from'    => $_GET['from'] ?? null,
@@ -569,12 +569,14 @@ class PassController extends BaseController
 
         // POST fields
         $cino      = $_POST["cino"]      ?? '';
-        $adv_type  = $_POST["adv_type"]  ?? 'P';   // PIP = P
+        $adv_type  = null; // FIX: PIP has NO advocate → must be NULL, NOT "P"
         $cldt      = $_POST["cldt"]      ?? '';
         $cltype    = $_POST["cltype"]    ?? '';
         $courtno   = intval($_POST["courtno"] ?? 0);
-        $itemno    = intval($_POST["itemno"] ?? 0);
-        $party     = 3;   
+        $itemno    = $_POST["itemno"] ?? '';  // varchar in DB
+
+        // PIP fixed values
+        $party     = null; // you requested NULL
         $partyno   = 0;
 
         $passfor   = $_POST["passfor"]   ?? 'P';
@@ -586,41 +588,35 @@ class PassController extends BaseController
         // Encrypt mobile
         $partymob = $this->getEncryptValue($partymob);
 
-        print_r($_POST);
-
         // Generate unique pass no
         $pass_no = $cltype . date("dmY", strtotime($cldt)) . $courtno . $itemno . date("His");
-
-        $adv_code   = '';
-        $adv_enroll = '';
 
         $sql = "INSERT INTO gatepass_details
         (cino, causelist_dt, causelist_type, court_no, item_no, pass_no, adv_type, 
          paddress, party_no, party_name, party_type, party_mob_no, passfor, passtype, 
          entry_dt, adv_code, adv_enroll, user_ip)
         VALUES
-        (:cino, :cldt, :cltype, :courtno, :itemno, :pass_no, :adv_type, :paddress, 
-         :partyno, :partynm, :party, :mob, :passfor, 3, NOW(), :adv_code, :adv_enroll, :user_ip)
+        (:cino, :cldt, :cltype, :courtno, :itemno, :pass_no, :adv_type,
+         :paddress, :partyno, :partynm, :party, :mob, :passfor, 3, NOW(),
+         NULL, NULL, :user_ip)
         RETURNING pass_no";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
-            ":cino"       => $cino,
-            ":cldt"       => date("Y-m-d", strtotime($cldt)),
-            ":cltype"     => $cltype,
-            ":courtno"    => $courtno,
-            ":itemno"     => $itemno,
-            ":pass_no"    => $pass_no,
-            ":adv_type"   => $adv_type,
-            ":paddress"   => $paddress,
-            ":partyno"    => $partyno,
-            ":partynm"    => $partynm,
-            ":party"      => $party,     // FIXED: always 3
-            ":mob"        => $partymob,
-            ":passfor"    => $passfor,
-            ":adv_code"   => null,
-            ":adv_enroll" => null,
-            ":user_ip"    => trim($user_ip)
+            ":cino"     => $cino,
+            ":cldt"     => date("Y-m-d", strtotime($cldt)),
+            ":cltype"   => $cltype,
+            ":courtno"  => $courtno,
+            ":itemno"   => $itemno,
+            ":pass_no"  => $pass_no,
+            ":adv_type" => null,     // FIXED HERE
+            ":paddress" => $paddress,
+            ":partyno"  => $partyno,
+            ":partynm"  => $partynm,
+            ":party"    => null,     // now NULL
+            ":mob"      => $partymob,
+            ":passfor"  => $passfor,
+            ":user_ip"  => trim($user_ip)
         ]);
 
         echo json_encode([
@@ -628,6 +624,7 @@ class PassController extends BaseController
             "pass_no" => $pass_no
         ]);
     }
+
 
     public function actionMyPasses()
     {
@@ -740,15 +737,15 @@ class PassController extends BaseController
 
             // BODY HTML
             $html = '
-<table border="1" cellspacing="0" cellpadding="5" width="100%">
-    <tr><td colspan="4" align="center"><b>Pass for Litigant</b></td></tr>
+        <table border="1" cellspacing="0" cellpadding="5" width="100%">
+            <tr><td colspan="4" align="center"><b>Pass for Litigant</b></td></tr>
 
-    <tr>
-        <td width="25%"><b>Case Details</b></td>
-        <td width="25%">' . $case_details . '</td>
-        <td width="25%"><b>Pass Number</b></td>
-        <td width="25%">' . $p['pass_no'] . '</td>
-    </tr>
+            <tr>
+                <td width="25%"><b>Case Details</b></td>
+                <td width="25%">' . $case_details . '</td>
+                <td width="25%"><b>Pass Number</b></td>
+                <td width="25%">' . $p['pass_no'] . '</td>
+            </tr>
 
     <tr>
         <td><b>Petitioner</b></td>
@@ -776,6 +773,85 @@ class PassController extends BaseController
             <b>' . $p['party_name'] . ' R/O ' . $address . '</b>
             and valid for case hearing on <b>' . $valid . ' only. </b> Litigant must carry a valid Photo ID with this ePass.
         </td>
+
+        <td width="25%" align="center">
+            <b>Pass Generation Date</b><br>' . $gen . '
+        </td>
+    </tr>
+</table>
+';
+
+            $pdf->SetFont('times', '', 11);
+            $pdf->writeHTML($html, true, false, true, false, '');
+
+            $pdf->Output("PASS_{$p['pass_no']}.pdf", 'D');
+        } else if ($p['passfor'] == 'P') {
+            $address    = $p['paddress'] ?? "-";
+            $case = $this->getCasePartyDetails($p['cino']);
+            $pet_name = $case['pet_name'] ?? "-";
+            $res_name = $case['res_name'] ?? "-";
+            $case_details = "-";
+            if (!empty($case['reg_no'])) {
+                $case_details = $case['reg_no'] . "/" . $case['reg_year'] . " (" . $case['type_name'] . ")";
+            }
+            $valid = date("d/m/Y", strtotime($p['causelist_dt']));
+            $gen   = date("d/m/Y H:i:s", strtotime($p['entry_dt']));
+            $qrText =
+                "COURT PASS DETAILS FOR PARTY IN PERSON\n" .
+                "Pass No: {$p['pass_no']}\n" .
+                "CINO: {$p['cino']}\n" .
+                "Court No: {$p['court_no']}\n" .
+                "Item No: {$p['item_no']}\n" .
+                "Name: {$p['party_name']}\n" .
+                "Address: {$address}\n" .
+                "Date of Hearing: {$valid}\n" .
+                "Generated On: {$gen}";
+
+            // INIT PDF
+            $pdf = new CourtPDF('P', 'mm', 'A4');
+            $pdf->setHeaderValues($valid, "RAJASTHAN HIGH COURT");
+            $pdf->SetMargins(9, 33, 9);
+            $pdf->AddPage();
+
+            // QR Code
+            $pdf->write2DBarcode($qrText, 'QRCODE,H', 178, 8, 22, 22);
+
+            // BODY HTML
+            $html = '
+        <table border="1" cellspacing="0" cellpadding="5" width="100%">
+            <tr><td colspan="4" align="center"><b>Pass for Party in Person</b></td></tr>
+
+            <tr>
+                <td width="25%"><b>Case Details</b></td>
+                <td width="25%">' . $case_details . '</td>
+                <td width="25%"><b>Pass Number</b></td>
+                <td width="25%">' . $p['pass_no'] . '</td>
+            </tr>
+
+    <tr>
+        <td><b>Petitioner</b></td>
+        <td>' . $pet_name . '</td>
+
+        <td><b>Respondent</b></td>
+        <td>' . $res_name . '</td>
+    </tr>
+</table>
+
+<table border="1" cellspacing="0" cellpadding="5" width="100%">
+    <tr style="background-color:#c8d9f1;">
+        <td colspan="4" align="center"><b>ePass Details</b></td>
+    </tr>
+
+    <tr>
+      <td width="75%">
+    This entry pass is issued for <b>' . $p['party_name'] . '</b>
+    and is valid for item no. <b>' . $p['item_no'] . '</b> in court no.
+    <b>' . $p['court_no'] . '</b>.
+    This pass is valid for case hearing on <b>' . $valid . '</b> only.
+    Party-in-Person must carry a valid Photo ID with this ePass.
+</td>
+
+
 
         <td width="25%" align="center">
             <b>Pass Generation Date</b><br>' . $gen . '
@@ -1037,6 +1113,70 @@ class PassController extends BaseController
             "redirect" => "/HC-EPASS-MVC/public/index.php?r=pass/viewSection&id=" . $ok
         ]);
     }
+
+    public function actionSavePIPSection()
+    {
+        $this->requireAuth();
+        $this->requireRole([10]);
+        header("Content-Type: application/json");
+
+        $sections = $_POST['sections'] ?? [];
+        $remarks  = $_POST['purpose'] ?? [];
+        $pass_dt = $_POST['visit_date'] ?? date("Y-m-d");
+        $litigantname = $_POST['pip_name'] ?? '';
+        $litigantmobile = $_POST['pip_mobile'] ?? '';
+        $litigant_address = $_POST['pip_address'] ?? '';
+        $litigantmobile = $this->getEncryptValue($litigantmobile);
+        if (empty($sections)) {
+            echo json_encode([
+                "status" => "ERROR",
+                "message" => "Please fill all required fields."
+            ]);
+            return;
+        }
+        $purposeIds = implode(",", $sections);
+        $remarkList = [];
+
+        foreach ($sections as $sid) {
+            $remarkList[] = [
+                "purpose" => $sid,
+                "remark"  => $remarks[$sid] ?? ""
+            ];
+        }
+        $remarkJson = json_encode($remarkList);
+        $passNo  = date("dmY") . date("His");
+        $userid  = $_SESSION['admin_user']['id'];
+
+        $model = new Pass();
+
+        $ok = $model->saveLitigantSectionRaw([
+            "pass_dt"     => $pass_dt,
+            "userid"      => $userid,
+            "userip"      => $_SESSION["admin_user"]["username"],
+            "adv_cd"      =>  $userid,
+            "adv_enroll"  => $userid,
+            "pass_no"     => $passNo,
+            "purpose_ids" => $purposeIds,
+            "remarks"     => $remarkJson,
+            "passfor"     => "PS",
+            "passtype"    => 3,
+            "litigantname" => $litigantname,
+            "litigantmobile" => $litigantmobile,
+            "litigant_address" => $litigant_address
+        ]);
+
+
+        if (!$ok) {
+            echo json_encode(["status" => "ERROR", "message" => "Unable to save pass"]);
+            return;
+        }
+
+        echo json_encode([
+            "status"   => "OK",
+            "message"  => "Section pass generated successfully.",
+            "redirect" => "/HC-EPASS-MVC/public/index.php?r=pass/viewSection&id=" . $ok
+        ]);
+    }
     public function viewSection()
     {
         $id = $_GET['id'] ?? null;
@@ -1162,6 +1302,108 @@ class PassController extends BaseController
             <b>' . $litigantname . ', R/O ' . $address . '</b>,  and is valid for 
             Ancillary Purposes other than court hearing on 
             <b>' . $valid . '</b> only.Litigant must carry a valid Photo ID with this ePass.
+        </td>
+        <td align="center">
+            <b>Pass Generation Date</b><br>' . $gen . '
+        </td>
+    </tr>
+
+</table>
+';
+
+            // Render
+            $pdf->SetFont('times', '', 11);
+            $pdf->writeHTML($html, true, false, true, false, '');
+            $pdf->Output("SECTION_PASS_{$p['pass_no']}.pdf", 'D');
+        } else if (trim($p['passfor']) == 'PS') {
+            // FETCH ADVOCATE DETAILS
+
+            $address   = $p['litigant_address'] ?? "N/A";
+            $litigantname = trim($p['litigantname']) ?? "N/A";
+
+            // DECODE PURPOSE JSON
+            $purposeData = json_decode($p['purposermks'], true);
+
+            $purposeLines = [];
+            $remarkLines  = [];
+
+            if (is_array($purposeData)) {
+                foreach ($purposeData as $item) {
+
+                    $sectionId   = $item['purpose'];
+                    $sectionName = $this->getSectionNameById($sectionId);
+                    $remarkText  = $item['remark'] ?? "";
+
+                    $purposeLines[] = $sectionName;
+                    $remarkLines[]  = $remarkText;
+                }
+            }
+            $purposeHTML = implode("<br>", $purposeLines);
+            $remarksHTML = implode("<br>", $remarkLines);
+            $valid = date("d/m/Y", strtotime($p['pass_dt']));
+            $gen   = date("d/m/Y H:i:s", strtotime($p['entry_dt']));
+
+            $qrText =
+                "SECTION PASS DETAILS FOR PARTY IN PERSON\n" .
+                "Pass No: {$p['pass_no']}\n" .
+                "PARTY: {$litigantname}\n" .
+                "Visit Date: {$valid}\n" .
+                "Generated On: {$gen}\n";
+            $pdf = new SectionPDF('P', 'mm', 'A4');
+            $pdf->setHeaderValues($valid);
+            $pdf->SetMargins(9, 33, 9);
+            $pdf->AddPage();
+            $pdf->write2DBarcode($qrText, 'QRCODE,H', 178, 8, 22, 22);
+            $html = '
+            <table border="1" cellspacing="0" cellpadding="5" width="100%">
+
+                <tr><td colspan="4" align="center"><b>Pass for Party in Person</b></td></tr>
+
+                <tr>
+                    <td width="25%"><b>Date of Visit</b></td>
+                    <td width="25%">' . $valid . '</td>
+                    <td width="25%"><b>Pass Number</b></td>
+                    <td width="25%">' . $p['pass_no'] . '</td>
+                </tr>
+
+    
+
+                <tr>
+                    <td width="25%"><b>Purpose of Visit</b></td>
+                    <td>' . $purposeHTML . '</td>
+                    <td width="25%"><b>Remarks</b></td>
+                    <td>' . $remarksHTML . '</td>
+                </tr>
+           
+
+</table>
+
+<br>
+';
+
+            // ================================
+            // NEW EPASS DETAILS TABLE (HC STYLE)
+            // ================================
+            $html .= '
+<table border="1" cellspacing="0" cellpadding="5" width="100%">
+
+    <!-- Blue Header -->
+    <tr style="background-color:#c8d9f1;">
+        <td colspan="4" align="center"><b>ePass Details</b></td>
+    </tr>
+
+    <!-- Pink Row -->
+   
+
+
+    <!-- Main Body -->
+    <tr>
+        <td colspan="3">
+            This entry pass is issued for 
+            <b>' . $litigantname . ', R/O ' . $address . '</b>,  and is valid for 
+            Ancillary Purposes other than court hearing on 
+            <b>' . $valid . '</b> only.Party in Person must carry a valid Photo ID with
+this ePass.
         </td>
         <td align="center">
             <b>Pass Generation Date</b><br>' . $gen . '
@@ -1344,9 +1586,18 @@ class CourtPDF extends TCPDF
             $this->Text(10, 10, 'LOGO NOT FOUND');
         }
 
-        // COURT NAME
-        $this->SetFont('times', 'B', 15);
-        $this->Text(55, 10, 'RAJASTHAN HIGH COURT BENCH JAIPUR');
+
+        if ($_SESSION['admin_user']['establishment'] == 'B') {
+            $this->SetFont('times', 'B', 15);
+            $this->Text(55, 10, 'RAJASTHAN HIGH COURT BENCH JAIPUR');
+        } else if ($_SESSION['admin_user']['establishment'] == 'P') {
+            $this->SetFont('times', 'B', 15);
+            $this->Text(55, 10, 'RAJASTHAN HIGH COURT JODHPUR');
+        }
+
+
+
+
 
         // PASS DETAILS
         $this->SetFont('times', 'B', 12);
@@ -1388,8 +1639,15 @@ class SectionPDF extends TCPDF
         }
 
         // COURT NAME
-        $this->SetFont('times', 'B', 15);
-        $this->Text(55, 10, 'RAJASTHAN HIGH COURT BENCH JAIPUR');
+        if ($_SESSION['admin_user']['establishment'] == 'B') {
+            $this->SetFont('times', 'B', 15);
+            $this->Text(55, 10, 'RAJASTHAN HIGH COURT BENCH JAIPUR');
+        } else if ($_SESSION['admin_user']['establishment'] == 'P') {
+            $this->SetFont('times', 'B', 15);
+            $this->Text(55, 10, 'RAJASTHAN HIGH COURT JODHPUR');
+        }
+        // $this->SetFont('times', 'B', 15);
+        // $this->Text(55, 10, 'RAJASTHAN HIGH COURT BENCH JAIPUR');
 
         // EPASS DETAILS CENTER
         $this->SetFont('times', 'B', 12);

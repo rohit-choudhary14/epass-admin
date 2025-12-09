@@ -23,7 +23,6 @@
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
     }
 
-    /* TITLE */
     .form-card h2 {
         font-size: 30px;
         font-weight: 800;
@@ -31,22 +30,6 @@
         color: #1e293b;
     }
 
-    /* STEP INDICATOR */
-    .step-indicator {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 25px;
-    }
-
-    .step-indicator div {
-        padding: 10px 16px;
-        background: #eef2ff;
-        border-radius: 8px;
-        font-weight: 600;
-        color: #1e40af;
-    }
-
-    /* FIXED GRID */
     .grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -59,7 +42,6 @@
         }
     }
 
-    /* LABEL */
     label {
         display: block;
         font-weight: 600;
@@ -68,7 +50,6 @@
         color: #111827;
     }
 
-    /* INPUTS — FIXED HEIGHT & SPACING */
     .input-field {
         width: 100%;
         padding: 13px 14px;
@@ -78,22 +59,6 @@
         font-size: 15px;
     }
 
-    /* Remove icon space issues */
-    .input-field::-webkit-calendar-picker-indicator {
-        padding: 0 !important;
-        margin: 0 !important;
-    }
-
-    /* SELECT2 height fix */
-    .select2-container--default .select2-selection--multiple {
-        min-height: 48px !important;
-        border-radius: 10px !important;
-        border: 1px solid #d1d5db !important;
-        background: #f9fafb !important;
-        padding: 6px !important;
-    }
-
-    /* PURPOSE BOX */
     .purpose-box {
         background: #eef2ff;
         border: 1px solid #c7d2fe;
@@ -109,7 +74,6 @@
         border: 1px solid #cbd5e1;
     }
 
-    /* BUTTON */
     .submit-btn {
         width: 100%;
         padding: 16px;
@@ -122,7 +86,6 @@
         font-weight: 700;
     }
 
-    /* SUCCESS / ERROR */
     .msg-error,
     .msg-success {
         padding: 13px;
@@ -140,90 +103,90 @@
         background: #dcfce7;
         color: #166534;
     }
+    /* Match Select2 box with input-field styling */
+.select2-container--default .select2-selection--multiple {
+    min-height: 48px !important;
+    border-radius: 10px !important;
+    border: 1px solid #d1d5db !important;
+    background: #f9fafb !important;
+    padding: 6px 8px !important;
+    font-size: 15px;
+}
 
-    /* FIX DATE INPUT WIDTH + RADIUS */
-    .input-field {
-        width: 100%;
-        padding: 13px 14px;
-        border-radius: 10px !important;
-        background: #f9fafb;
-        border: 1px solid #d1d5db;
-        font-size: 15px;
-        box-sizing: border-box;
-    }
-
-    /* Remove weird padding from date’s native icon */
-    input[type="date"] {
-        appearance: none;
-        -webkit-appearance: none;
-    }
-
-    /* Calendar icon size fix */
-    input[type="date"]::-webkit-calendar-picker-indicator {
-        width: 22px;
-        height: 22px;
-        cursor: pointer;
-        margin-right: 6px;
-    }
 </style>
 
-
 <div class="form-wrapper">
-
     <div class="form-card">
-
-
-
         <h2>Party In Person Section Pass</h2>
-
         <div id="form-message"></div>
 
         <form id="sectionPassForm">
-            <div>
-                <div class="grid">
-                    <div>
-                        <label>Date of Visit</label>
-                        <input type="date" class="input-field" name="visit_date" required>
-                    </div>
-                    <div>
-                        <label style="font-weight:700;font-size:16px;">Select Sections</label>
-                        <select id="sections" name="sections[]" multiple style="width:100%;">
-                            <?php foreach ($purposeList as $p): ?>
-                                <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['purpose']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-                <div id="purpose-wrapper"></div>
 
-                <button type="submit" class="submit-btn">Generate Section Pass</button>
+            <!-- PARTY IN PERSON DETAILS -->
+            <div class="grid">
+                <div>
+                    <label>Party-in-Person Name</label>
+                    <input type="text" class="input-field" name="pip_name" required>
+                </div>
+
+                <div>
+                    <label>Mobile Number</label>
+                    <input type="text" class="input-field" name="pip_mobile" maxlength="10" required>
+                </div>
+            </div>
+
+            <div style="margin-top:20px;">
+                <label>Full Address</label>
+                <input type="text" class="input-field" name="pip_address" required>
+            </div>
+
+            <hr style="margin:25px 0;">
+
+            <!-- VISIT DATE + SECTIONS -->
+            <div class="grid">
+                <div>
+                    <label>Date of Visit</label>
+                    <input type="date" class="input-field" name="visit_date" required>
+                </div>
+
+                <div>
+                    <label style="font-weight:700;font-size:16px;">Select Sections</label>
+                   <select id="sections" name="sections[]" class="input-field" multiple style="width:100%;">
+
+                        <?php foreach ($purposeList as $p): ?>
+                            <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['purpose']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+
+            <div id="purpose-wrapper"></div>
+
+            <button type="submit" class="submit-btn">Generate Section Pass</button>
 
         </form>
-
-
     </div>
-
 </div>
 
 <script>
     $(document).ready(function() {
 
-        // INIT SELECT2
+        // init select2
         $('#sections').select2({
             placeholder: "Select Sections",
             allowClear: true,
             closeOnSelect: false
         });
 
-        // CREATE purpose inputs dynamically
+        // dynamic purpose fields
         $('#sections').on('change', function() {
-            let selectedIds = $(this).val();
+            let ids = $(this).val();
             let wrapper = $("#purpose-wrapper");
             wrapper.html("");
 
-            if (!selectedIds) return;
+            if (!ids) return;
 
-            selectedIds.forEach(id => {
+            ids.forEach(id => {
                 let label = $("#sections option[value='" + id + "']").text();
                 wrapper.append(`
                 <div class="purpose-box">
@@ -234,31 +197,44 @@
             });
         });
 
-
-
-    });
-</script>
-
-
-<div id="form-message"></div>
-
-<script>
-    $(document).ready(function() {
+        // submit form
         $("#sectionPassForm").on("submit", function(e) {
             e.preventDefault();
 
             $("#form-message").html("");
 
+            let name = $("input[name='pip_name']").val().trim();
+            let mobile = $("input[name='pip_mobile']").val().trim();
+            let address = $("input[name='pip_address']").val().trim();
             let visit = $("input[name='visit_date']").val().trim();
             let sections = $("#sections").val();
-            if ( visit === "") {
+
+            // REQUIRED VALIDATION
+            if (name === "" || mobile === "" || address === "" || visit === "") {
                 $("#form-message").html(`<div class="msg-error">Please fill all required fields.</div>`);
                 return;
             }
+
+            // ✅ OLD MOBILE VALIDATION (RESTORED)
+            if (!/^[0-9]{10}$/.test(mobile)) {
+                $("#form-message").html(`<div class="msg-error">Invalid mobile number.</div>`);
+                return;
+            }
+            if (!/^[6-9]/.test(mobile)) {
+                $("#form-message").html(`<div class="msg-error">Mobile must start with 6–9.</div>`);
+                return;
+            }
+            if (/^(\d)\1+$/.test(mobile)) {
+                $("#form-message").html(`<div class="msg-error">Invalid mobile number pattern.</div>`);
+                return;
+            }
+
+            // SECTION VALIDATION (UNCHANGED — AS BEFORE)
             if (!sections || sections.length === 0) {
                 $("#form-message").html(`<div class='msg-error'>Please select at least one section.</div>`);
                 return;
             }
+
             for (let id of sections) {
                 let purpose = $(`input[name='purpose[${id}]']`).val()?.trim();
                 if (!purpose || purpose === "") {
@@ -266,6 +242,7 @@
                     return;
                 }
             }
+
             let formData = $("#sectionPassForm").serialize();
             showLoader();
 
@@ -295,6 +272,5 @@
 
     });
 </script>
-
 
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

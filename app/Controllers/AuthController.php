@@ -25,10 +25,6 @@ class AuthController extends BaseController
             include __DIR__ . '/../Views/auth/login.php';
             return;
         }
-        // if ($user['type'] == 10) {
-        //     header("Location: /HC-EPASS-MVC/public/index.php?r=officer/dashboard");
-        //     exit;
-        // }
         $user = $this->userModel->findByUsername($username);
 
         if (!$user) {
@@ -45,11 +41,11 @@ class AuthController extends BaseController
                 'id' => $user['id'],
                 'name' => $user['name'],
                 'username' => $user['username'],
-                'role_id' => (int)$user['role_id']
+                'role_id' => (int)$user['role_id'],
+                'establishment' => $user['estt']
             ];
-            // header('Location: /hc-epass-mvc/public/index.php?r=dashboard/index');
-            // exit();
-            if ($user['role_id'] == 2) {  // Admin
+
+            if ($user['role_id'] == 20) {  // Admin
                 header("Location: /HC-EPASS-MVC/public/index.php?r=dashboard/index");
                 exit();
             }
@@ -77,8 +73,21 @@ class AuthController extends BaseController
 
     public function registerForm()
     {
+        // token from URL → ?token=abcd1234
+        $token = $_GET['token'] ?? '';
+
+        // your secure token (store in config or database)
+        $validToken = "HCADMIN-REGISTER-2025";
+
+        // token check
+        if ($token !== $validToken) {
+            http_response_code(403);
+            die("Forbidden: Invalid or Missing Token");
+        }
+
         include __DIR__ . '/../Views/auth/register.php';
     }
+
 
     public function registerPost()
     {
@@ -130,7 +139,7 @@ class AuthController extends BaseController
     }
     public function registerOfficerPost()
     {
-        $this->requireRole([2]); // admin only
+        $this->requireRole([20]); // admin only
 
         $username = trim($_POST['username']);
         $name     = trim($_POST['name']);
@@ -173,7 +182,7 @@ class AuthController extends BaseController
     {
 
         // ensure only admin can view
-        if (!isset($_SESSION['admin_user']) || $_SESSION['admin_user']['role_id'] != 2) {
+        if (!isset($_SESSION['admin_user']) || $_SESSION['admin_user']['role_id'] != 20) {
             header("Location: /HC-EPASS-MVC/public/index.php?r=auth/loginForm");
             exit;
         }

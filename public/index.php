@@ -43,6 +43,9 @@ switch ($controller) {
         $c = new OfficerController();
 
         if ($action === 'dashboard') $c->dashboard();
+        elseif ($action === 'ch_estab') $c->changeEstablishment();
+        elseif ($action === 'saveEstablishment' && $_SERVER['REQUEST_METHOD'] === 'POST')
+    $c->saveEstablishment();
         else $c->dashboard();
         break;
 
@@ -77,6 +80,7 @@ switch ($controller) {
         elseif ($action === 'downloadPdf') $c->actionDownloadPdf();
         elseif ($action === 'saveAdvocateSection') $c->actionSaveAdvocateSection();
         elseif ($action === 'saveLitigantSection') $c->actionSaveLitigantSection();
+        elseif ($action === 'savePartyInPsersonSection') $c->actionSavePIPSection();
         elseif ($action === 'viewSection') $c->viewSection();
 
 

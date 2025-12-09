@@ -52,7 +52,7 @@
     <h1>Access Denied</h1>
     <p>You do not have permission to view this page.</p>
 
-    <?php if($_SESSION['admin_user']['role_id'] == 2): ?>
+    <?php if($_SESSION['admin_user']['role_id'] == 20): ?>
         <a class="btn" href="/HC-EPASS-MVC/public/index.php?r=dashboard/index">Go to Admin Dashboard</a>
     <?php else: ?>
         <a class="btn" href="/HC-EPASS-MVC/public/index.php?r=officer/dashboard">Go to Officer Dashboard</a>

@@ -152,7 +152,7 @@
                             if (!empty($p['passfor'])) {
                             switch ($p['passfor']) {
                             case 'L': $passForLabel = 'Litigant'; break;
-                            case 'A': $passForLabel = 'Advocate'; break;
+                            case 'P': $passForLabel = 'PIP'; break;
                             case 'C': $passForLabel = 'Court'; break;
                             default: $passForLabel = $p['passfor'];
                             }
