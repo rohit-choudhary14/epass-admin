@@ -163,7 +163,7 @@ class PassController extends BaseController
         $goto = isset($_GET['goto']) ? strtolower(trim($_GET['goto'])) : '';
 
         // Allowed types
-        $validTypes = ['advocate', 'litigant','partyinperson'];
+        $validTypes = ['advocate', 'litigant', 'partyinperson'];
 
         // Allowed goto modes
         $validGoto = ['court', 'section'];
@@ -259,18 +259,14 @@ class PassController extends BaseController
                 "caseTypes" => $caseTypes,
                 "type"      => $type
             ]);
-
-        }
-        else  if ($type === 'partyinperson') {
+        } else  if ($type === 'partyinperson') {
 
             // Load litigant version of the form
             $this->render("pass/generate_search_court_pip", [
                 "caseTypes" => $caseTypes,
                 "type"      => $type
             ]);
-
         }
-       
     }
 
 
@@ -566,6 +562,73 @@ class PassController extends BaseController
             "pass_no" => $pass_no
         ]);
     }
+    public function actionGenerateCourtPassPartyInPerson()
+    {
+        $this->requireRole([10]);
+        $this->requireAuth();
+
+        // POST fields
+        $cino      = $_POST["cino"]      ?? '';
+        $adv_type  = $_POST["adv_type"]  ?? 'P';   // PIP = P
+        $cldt      = $_POST["cldt"]      ?? '';
+        $cltype    = $_POST["cltype"]    ?? '';
+        $courtno   = intval($_POST["courtno"] ?? 0);
+        $itemno    = intval($_POST["itemno"] ?? 0);
+        $party     = 3;   
+        $partyno   = 0;
+
+        $passfor   = $_POST["passfor"]   ?? 'P';
+        $partynm   = $_POST["partynm"]   ?? '';
+        $partymob  = $_POST["partymob"]  ?? '';
+        $paddress  = $_POST["paddress"]  ?? '';
+        $user_ip   = $_SESSION["admin_user"]["username"];
+
+        // Encrypt mobile
+        $partymob = $this->getEncryptValue($partymob);
+
+        print_r($_POST);
+
+        // Generate unique pass no
+        $pass_no = $cltype . date("dmY", strtotime($cldt)) . $courtno . $itemno . date("His");
+
+        $adv_code   = '';
+        $adv_enroll = '';
+
+        $sql = "INSERT INTO gatepass_details
+        (cino, causelist_dt, causelist_type, court_no, item_no, pass_no, adv_type, 
+         paddress, party_no, party_name, party_type, party_mob_no, passfor, passtype, 
+         entry_dt, adv_code, adv_enroll, user_ip)
+        VALUES
+        (:cino, :cldt, :cltype, :courtno, :itemno, :pass_no, :adv_type, :paddress, 
+         :partyno, :partynm, :party, :mob, :passfor, 3, NOW(), :adv_code, :adv_enroll, :user_ip)
+        RETURNING pass_no";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            ":cino"       => $cino,
+            ":cldt"       => date("Y-m-d", strtotime($cldt)),
+            ":cltype"     => $cltype,
+            ":courtno"    => $courtno,
+            ":itemno"     => $itemno,
+            ":pass_no"    => $pass_no,
+            ":adv_type"   => $adv_type,
+            ":paddress"   => $paddress,
+            ":partyno"    => $partyno,
+            ":partynm"    => $partynm,
+            ":party"      => $party,     // FIXED: always 3
+            ":mob"        => $partymob,
+            ":passfor"    => $passfor,
+            ":adv_code"   => null,
+            ":adv_enroll" => null,
+            ":user_ip"    => trim($user_ip)
+        ]);
+
+        echo json_encode([
+            "status"  => "OK",
+            "pass_no" => $pass_no
+        ]);
+    }
+
     public function actionMyPasses()
     {
         $this->requireRole([10]);  // Only officers
@@ -1035,7 +1098,7 @@ class PassController extends BaseController
             $remarksHTML = implode("<br>", $remarkLines);
             $valid = date("d/m/Y", strtotime($p['pass_dt']));
             $gen   = date("d/m/Y H:i:s", strtotime($p['entry_dt']));
-          
+
             $qrText =
                 "SECTION PASS DETAILS FOR LITIGANT\n" .
                 "Pass No: {$p['pass_no']}\n" .

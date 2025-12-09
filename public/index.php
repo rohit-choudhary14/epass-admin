@@ -51,38 +51,39 @@ switch ($controller) {
        PASS CONTROLLER
        =============================== */
 
-   /* ===============================
+    /* ===============================
    PASS CONTROLLER
    =============================== */
-case 'pass':
-    $c = new PassController();
+    case 'pass':
+        $c = new PassController();
 
-    if ($action === 'list') $c->list();
-    elseif ($action === 'ajaxList') $c->ajaxList();
-    elseif ($action === 'view') $c->view();
-    elseif ($action === 'revoke' && $_SERVER['REQUEST_METHOD'] === 'POST') $c->revoke();
-    elseif ($action === 'exportCsv') $c->exportCsv();
+        if ($action === 'list') $c->list();
+        elseif ($action === 'ajaxList') $c->ajaxList();
+        elseif ($action === 'view') $c->view();
+        elseif ($action === 'revoke' && $_SERVER['REQUEST_METHOD'] === 'POST') $c->revoke();
+        elseif ($action === 'exportCsv') $c->exportCsv();
 
-    // NEW ROUTES (ONLY ONE PASS BLOCK)
-    elseif ($action === 'generate') $c->generate();
-    elseif ($action === 'generateForm') $c->actionGenerateForm();
-    elseif ($action === 'courtForm') $c->actionCourtForm();
-    elseif ($action === 'searchCourtCase') $c->actionSearchCourtCase();
-    elseif ($action === 'generateCourt') $c->actionGenerateCourtPass();
-     elseif ($action === 'generateCourtLitigant') $c->actionGenerateCourtPassLitigant();
-    elseif ($action === 'myPasses') $c->actionMyPasses();
-    elseif ($action === 'mySectionPasses') $c->mySectionPasses();
-    elseif ($action === 'printSection') $c->printSection();
-    elseif ($action === 'downloadPdf') $c->actionDownloadPdf();
-    elseif ($action === 'saveAdvocateSection') $c->actionSaveAdvocateSection();
-    elseif ($action === 'saveLitigantSection') $c->actionSaveLitigantSection();
-    elseif ($action === 'viewSection') $c->viewSection();
+        // NEW ROUTES (ONLY ONE PASS BLOCK)
+        elseif ($action === 'generate') $c->generate();
+        elseif ($action === 'generateForm') $c->actionGenerateForm();
+        elseif ($action === 'courtForm') $c->actionCourtForm();
+        elseif ($action === 'searchCourtCase') $c->actionSearchCourtCase();
+        elseif ($action === 'generateCourt') $c->actionGenerateCourtPass();
+        elseif ($action === 'generateCourtLitigant') $c->actionGenerateCourtPassLitigant();
+        elseif ($action === 'generateCourtPIP') $c->actionGenerateCourtPassPartyInPerson();
+        elseif ($action === 'myPasses') $c->actionMyPasses();
+        elseif ($action === 'mySectionPasses') $c->mySectionPasses();
+        elseif ($action === 'printSection') $c->printSection();
+        elseif ($action === 'downloadPdf') $c->actionDownloadPdf();
+        elseif ($action === 'saveAdvocateSection') $c->actionSaveAdvocateSection();
+        elseif ($action === 'saveLitigantSection') $c->actionSaveLitigantSection();
+        elseif ($action === 'viewSection') $c->viewSection();
 
 
 
 
-    else $c->list();
-    break;
+        else $c->list();
+        break;
 
 
 

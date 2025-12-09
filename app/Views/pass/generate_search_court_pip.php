@@ -176,6 +176,35 @@
     <div id="case-title" style="display:none;margin-top:10px;font-size:16px;font-weight:600;color:#4f46e5;"></div>
 
     <div id="case-result"></div>
+<!-- ================= NOTICE MODAL ================= -->
+<div class="modal fade" id="noticeModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" style="border-radius:12px;">
+
+     <div class="modal-header" style="justify-content:center;">
+    <h4 class="modal-title" style="color:#d00000; font-weight:800; text-align:center;">
+        NOTICE
+    </h4>
+</div>
+
+
+      <div class="modal-body" style="font-size:20px; color:#d00000; line-height:1.6; text-align:center;">
+        पार्टी-इन-पर्सन के पास के लिए केवल वे पक्षकार ही रजिस्ट्रेशन कर सकते हैं एवं ई-पास बना सकते हैं,
+        जिनका कोई अधिवक्ता नहीं है और उन्हें खुद ही अपने प्रकरण की पैरोवी करनी है।
+        ऐसे पक्षकार जिन्होंने अधिवक्ता के माध्यम से प्रकरण दायर किया है,
+        वे पार्टी-इन-पर्सन में रजिस्ट्रेशन नहीं करें एवं ई-पास नहीं बनायें।
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
+                style="padding:8px 25px; font-size:18px;">
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
 
 </div>
 
@@ -220,12 +249,13 @@
             .then(r => r.json())
             .then(data => {
                 hideLoader();
-                showLitigantCase(data);
+                showPipCase(data);
             });
     });
 
     /* ---------------------- SHOW CASE FOR LITIGANT ---------------------- */
-function showLitigantCase(data) {
+/* ---------------------- SHOW PIP CASE ---------------------- */
+function showPipCase(data) {
 
     let box = document.getElementById("case-result");
 
@@ -235,40 +265,6 @@ function showLitigantCase(data) {
         return;
     }
 
-    // Build advocate dropdown
-    let advOptions = data.advocates.map(a => `
-        <option value="${a.name}||${a.adv_code}||${a.side}">
-            ${a.name} (${a.side_label})
-        </option>
-    `).join("");
-
-    // Determine litigant side automatically
-    let sides = [...new Set(data.advocates.map(a => a.side))];
-    let partySelectHTML = "";
-
-    if (sides.length === 1) {
-        // Auto side
-        let side = sides[0];
-        let label = (side == 1 ? "Petitioner" : "Respondent");
-
-        partySelectHTML = `
-            <div class="form-group">
-                <label><b>Litigant Side</b></label>
-                <input type="text" id="party_side_label" value="${label}" disabled>
-                <input type="hidden" id="party_side" value="${side}">
-            </div>
-        `;
-    } else {
-        // If both side advocates exist
-        partySelectHTML = `
-            <label>Select Party (Litigant)</label>
-            <select id="party_side">
-                <option value="1">Petitioner</option>
-                <option value="2">Respondent</option>
-            </select>
-        `;
-    }
-
     box.style.display = "block";
     box.innerHTML = `
         <div class="result-title">Case Found</div>
@@ -276,155 +272,115 @@ function showLitigantCase(data) {
         <p><b>Court Room:</b> ${data.court_no}</p>
         <p><b>Item No:</b> ${data.item_no}</p>
 
-        <label><b>Pass Recommended By (Advocate)</b></label>
-        <select id="recommended_adv">
-            ${advOptions}
-        </select>
-
-        ${partySelectHTML}
+        <!-- Party-in-Person Declaration -->
+        <div style="margin:15px 0; padding:12px; background:#fff; border-radius:8px;">
+            <label style="font-size:16px; cursor:pointer;">
+                <input type="checkbox" id="pip_declaration" style="margin-right:6px;">
+                <b>I declare that I am appearing as Party-in-Person in this case
+                and I am not represented by any Advocate.</b>
+            </label>
+        </div>
 
         <button class="generate-btn"
-            onclick='openLitigantForm("${encodeURIComponent(JSON.stringify(data))}")'>
+            onclick='validatePIP("${encodeURIComponent(JSON.stringify(data))}")'>
             Continue
         </button>
     `;
 }
 
+/* ---------------------- CHECK DECLARATION ---------------------- */
+function validatePIP(encoded) {
+    let cb = document.getElementById("pip_declaration");
 
+    if (!cb.checked) {
+        alert("Please confirm that you are appearing as Party-in-Person.");
+        return;
+    }
 
+    openPIPForm(encoded);
+}
 
-    /* ---------------------- SHOW LITIGANT FINAL FORM ---------------------- */
-  function openLitigantForm(encoded) {
+/* ---------------------- OPEN PIP FORM ---------------------- */
+function openPIPForm(encoded) {
 
     let data = JSON.parse(decodeURIComponent(encoded));
 
-    // Determine litigant side
-    let side;
-    if (document.getElementById("party_side")) {
-        side = document.getElementById("party_side").value;
-    } else {
-        // read from advocate
-        let recommended = document.getElementById("recommended_adv").value.split("||");
-        side = recommended[2];  
-    }
-
-    let sideLabel = (side == 1 ? "Petitioner" : "Respondent");
-
-    // Advocate info
-    let recommended = document.getElementById("recommended_adv").value.split("||");
-    let recommendedName = recommended[0];
-    let recommendedCode = recommended[1];
-
     document.getElementById("case-result").innerHTML = `
         <div class="new-pass-box">
-            <h3 class="pass-title">Generate Litigant Pass</h3>
-
-            <p><b>Pass Recommended By:</b> ${recommendedName}</p>
-            <p><b>Litigant Side:</b> ${sideLabel}</p>
+            <h3 class="pass-title">Generate Party-in-Person Pass</h3>
 
             <div class="form-group">
-                <label>Litigant Name</label>
-                <input type="text" id="lit_name" placeholder="Enter Name">
+                <label>Your Full Name</label>
+                <input type="text" id="pip_name" placeholder="Enter Full Name">
             </div>
 
             <div class="form-group">
                 <label>Mobile Number</label>
-                <input type="text" id="lit_mobile" maxlength="10">
+                <input type="text" id="pip_mobile" maxlength="10">
             </div>
 
             <div class="form-group">
                 <label>Full Address</label>
-                <input type="text" id="lit_address">
+                <input type="text" id="pip_address" placeholder="Enter Full Address">
             </div>
 
-            <!-- Hidden fields -->
-            <input type="hidden" id="partyno" value="0">
-            <input type="hidden" id="partynm" value="">
-            <input type="hidden" id="partymob" value="">
-            <input type="hidden" id="paddress" value="">
-            <input type="hidden" id="passfor" value="L">
-            <input type="hidden" id="adv_code" value="${recommendedCode}">
-            <input type="hidden" id="party_side" value="${side}">
-
             <button class="generate-btn-full"
-                onclick="submitLitigant(
-                    '${encodeURIComponent(JSON.stringify(data))}', 
-                    '${side}', 
-                    '${recommendedName}', 
-                    '${recommendedCode}'
-                )">
+                onclick="submitPIP('${encodeURIComponent(JSON.stringify(data))}')">
                 Generate Pass
             </button>
         </div>
     `;
 }
 
+/* ---------------------- VALID MOBILE ---------------------- */
+function isValidMobile(mob) {
+    return /^[6-9][0-9]{9}$/.test(mob);
+}
 
-    function isValidMobile(mob) {
-        // Must be exactly 10 digits
-        if (!/^[0-9]{10}$/.test(mob)) return false;
+/* ---------------------- SUBMIT PIP PASS ---------------------- */
+function submitPIP(encoded) {
 
-        // Cannot start with 0-5 (Indian mobile standard)
-        if (!/^[6-9]/.test(mob)) return false;
+    let data = JSON.parse(decodeURIComponent(encoded));
 
-        // Cannot be 0000000000 or repeated pattern
-        if (/^(\d)\1+$/.test(mob)) return false;
+    let name = document.getElementById("pip_name").value.trim();
+    let mobile = document.getElementById("pip_mobile").value.trim();
+    let address = document.getElementById("pip_address").value.trim();
 
-        return true;
-    }
+    if (name === "") { alert("Name cannot be empty."); return; }
+    if (!isValidMobile(mobile)) { alert("Enter valid Indian mobile number."); return; }
+    if (address === "") { alert("Address cannot be empty."); return; }
 
-    /* ---------------------- SUBMIT LITIGANT PASS ---------------------- */
-    function submitLitigant(encoded, side, recAdvName, recAdvCode) {
+    let fd = new FormData();
 
-        let data = JSON.parse(decodeURIComponent(encoded));
+    // REQUIRED BACKEND FIELDS (MATCH YOUR SCREENSHOT)
+    fd.append("cino", data.cino);
+    fd.append("cldt", data.cl_date);
+    fd.append("cltype", data.cl_type);
+    fd.append("courtno", data.court_no);
+    fd.append("itemno", data.item_no);
 
-        let name = document.getElementById("lit_name").value.trim();
-        let mobile = document.getElementById("lit_mobile").value.trim();
-        let address = document.getElementById("lit_address").value.trim();
-        let party_side = document.getElementById("party_side").value.trim();
+    fd.append("partynm", name);     // Party Name
+    fd.append("partymob", mobile);  // Mobile
+    fd.append("paddress", address); // Address
+    fd.append("partyno", "0");      // Always 0 for PIP
+    fd.append("passfor", "P");      // Pass type: PIP
 
-        // VALIDATIONS
-        if (name === "") {
-            alert("Litigant name cannot be empty.");
-            return;
-        }
+    fetch("/HC-EPASS-MVC/public/index.php?r=pass/generateCourtPIP", {
+        method: "POST",
+        body: fd
+    })
+    .then(r => r.json())
+    .then(resp => {
+        alert("Party-in-Person Pass Generated! PASS NO: " + resp.pass_no);
+    });
+}
 
-        if (!isValidMobile(mobile)) {
-            alert("Enter a valid 10-digit mobile number (should start from 6-9 and cannot be all zeros).");
-            return;
-        }
 
-        if (address === "") {
-            alert("Litigant address cannot be empty.");
-            return;
-        }
-
-        let fd = new FormData();
-        fd.append("cino", data.cino);
-        fd.append("lit_name", name);
-        fd.append("lit_mobile", mobile);
-        fd.append("lit_address", address);
-        fd.append("passfor", 'L');
-        // Recommended advocate
-        fd.append("recommended_by", recAdvName);
-        fd.append("recommended_code", recAdvCode);
-        fd.append("adv_type", party_side);
-        fd.append("courtno", data.court_no);
-        fd.append("itemno", data.item_no);
-        fd.append("cldt", data.cl_date);
-        fd.append("cltype", data.cl_type);
-
-        // showLoader();
-        fetch("/HC-EPASS-MVC/public/index.php?r=pass/generateCourtLitigant", {
-                method: "POST",
-                body: fd
-            })
-            .then(r => r.json())
-            .then(resp => {
-                hideLoader();
-                alert("Litigant Pass Generated! PASS NO: " + resp.pass_no);
-            });
-    }
 </script>
-
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var noticeModal = new bootstrap.Modal(document.getElementById('noticeModal'));
+    noticeModal.show();
+});
+</script>
 <?php include __DIR__ . '/../layouts/footer.php'; ?>
