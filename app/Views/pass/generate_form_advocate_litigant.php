@@ -303,55 +303,84 @@
 
             // VALIDATIONS
             if (enroll === "" || visit === "" || litName === "" || litAddress === "") {
-                $("#form-message").html(`<div class="msg-error">Please fill all required fields.</div>`);
+                showError("Please fill all required fields.");
                 return;
             }
 
             if (!isValidMobile(litMobile)) {
-                $("#form-message").html(`<div class="msg-error">Invalid mobile number.</div>`);
+                showError("Invalid mobile number.");
                 return;
             }
 
             if (!sections || sections.length === 0) {
-                $("#form-message").html(`<div class='msg-error'>Please select at least one section.</div>`);
+                showError("Please select at least one section.");
                 return;
             }
 
-            // CHECK purpose for each section
             for (let id of sections) {
                 let purpose = $(`input[name='purpose[${id}]']`).val()?.trim();
                 if (!purpose || purpose === "") {
-                    $("#form-message").html(`<div class='msg-error'>Purpose missing for selected section.</div>`);
+                    showError("Purpose missing for selected section.");
                     return;
                 }
             }
 
-            // SUBMIT TO BACKEND
-            let formData = $("#sectionPassForm").serialize();
+            // 🔐 BUILD ENCRYPTED FORM DATA
+            let fd = new FormData();
+
+            fd.append("enroll", safeEncode(enroll));
+            fd.append("visit_date", safeEncode(visit));
+            fd.append("lit_name", safeEncode(litName));
+            fd.append("lit_mobile", safeEncode(litMobile));
+            fd.append("lit_address", safeEncode(litAddress));
+
+            // --- SECTIONS ENCRYPT --- //
+            let encryptedSections = safeEncode(JSON.stringify(sections));
+            fd.append("sections", encryptedSections);
+
+            // --- PURPOSE ENCRYPT --- //
+            let purposes = {};
+            sections.forEach(id => {
+                purposes[id] = $(`input[name='purpose[${id}]']`).val().trim();
+            });
+
+            // Encode full JSON of purposes
+            let encryptedPurposes = safeEncode(JSON.stringify(purposes));
+            fd.append("purpose", encryptedPurposes);
+
             showLoader();
 
             $.ajax({
                 url: "/HC-EPASS-MVC/public/index.php?r=pass/saveLitigantSection",
                 type: "POST",
-                data: formData,
+                data: fd,
+                processData: false,
+                contentType: false,
                 dataType: "json",
+
                 success: function(res) {
                     hideLoader();
 
                     if (res.status === "ERROR") {
-                        $("#form-message").html(`<div class='msg-error'>${res.message}</div>`);
+                        showError(res.message);
                         return;
                     }
 
-                    $("#form-message").html(`<div class='msg-success'>Pass Generated Successfully! Redirecting...</div>`);
+                    showSuccess("Pass Generated Successfully! Redirecting...");
 
                     setTimeout(() => {
                         window.location.href = res.redirect;
-                    }, 1200);
+                    }, 1500);
+                },
+
+                error: function(xhr) {
+                    hideLoader();
+                    showError("Server Error: " + (xhr.responseText || "Unable to connect"));
                 }
             });
-
         });
+
+
 
 
     });

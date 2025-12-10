@@ -1,7 +1,11 @@
 Options -Indexes
+
 RewriteEngine On
 
-RewriteBase /hc-epass-mvc/
+# Automatically detect current folder — NO RewriteBase needed
 
-RewriteCond %{REQUEST_URI} !^/hc-epass-mvc/public/
-RewriteRule ^(.*)$ public/$1 [L]
+# If request is not already inside /public
+RewriteCond %{REQUEST_URI} !public/
+
+# Redirect all requests to /public
+RewriteRule ^(.*)$ public/$1 [L,QSA]

@@ -243,14 +243,22 @@ class PassController extends BaseController
     {
         $this->requireRole([10]);
 
-        // detect type (advocate / litigant)
-        $type = $_GET['type'] ?? 'advocate';
+
+        $type = isset($_GET['type']) ? strtolower(trim($_GET['type'])) : '';
+        $goto = isset($_GET['goto']) ? strtolower(trim($_GET['goto'])) : '';
 
         require_once __DIR__ . '/../Models/Court.php';
         $court = new Court();
 
         $caseTypes = $court->getCaseTypes();
-
+        if ($type === 'advocate') {
+            $this->render("pass/generate_search_court", [
+                "type" => $type,
+                "goto" => $goto,
+                "caseTypes" => $caseTypes,
+            ]);
+            return;
+        }
         // Load different views based on type
         if ($type === 'litigant') {
 
@@ -308,7 +316,7 @@ class PassController extends BaseController
         $maxDate->modify('+3 days');
 
         // Check: Cannot be past date
-        // if ($selected < $today) {
+        // if ($selected <b $today) {
         //     echo json_encode([
         //         "status" => "ERROR",
         //         "message" => "Causelist date cannot be older than today."
@@ -446,20 +454,29 @@ class PassController extends BaseController
     {
         $this->requireRole([10]);
         $this->requireAuth();
-        $cino      = $_POST["cino"]      ?? '';
-        $adv_type  = $_POST["adv_type"]  ?? '';
-        $cldt      = $_POST["cldt"]      ?? '';
-        $cltype    = $_POST["cltype"]    ?? '';
-        $courtno   = $_POST["courtno"]   ?? '';
-        $itemno    = $_POST["itemno"]    ?? '';
-        $party     = $_POST["party"]     ?? '';
-        $passfor   = $_POST["passfor"]   ?? '';
-        $partyno   = $_POST["partyno"]   ?? '';
-        $partynm   = $_POST["partynm"]   ?? '';
-        $partymob  = $_POST["partymob"]  ?? '';
-        $adv_code  = $_POST["adv_code"]  ?? '';
+        $cino      = $this->decodeField(($_POST["cino"]))      ?? '';
+        $adv_type  = $this->decodeField($_POST["adv_type"])  ?? '';
+        $cldt      = $this->decodeField($_POST["cldt"])     ?? '';
+        $cltype    = $this->decodeField($_POST["cltype"])   ?? '';
+        $courtno   = $this->decodeField($_POST["courtno"])   ?? '';
+        $itemno    = $this->decodeField($_POST["itemno"])    ?? '';
+        $party     = $this->decodeField($_POST["party"])    ?? '';
+        $passfor   = $this->decodeField($_POST["passfor"])  ?? '';
+        $partyno   = $this->decodeField($_POST["partyno"])  ?? '';
+        $partynm   = $this->decodeField($_POST["partynm"])  ?? '';
+        $partymob  = $this->decodeField($_POST["partymob"]) ?? '';
+        $adv_code  = $this->decodeField($_POST["adv_code"])  ?? '';
         $user_ip  = $_SESSION["admin_user"]["username"];
+        // ========== DUPLICATE PASS CHECK ==========
+        $model = new Pass();
 
+        if ($model->isAdvocatePassExists($cino, $adv_code, $courtno, $itemno, $cldt)) {
+            echo json_encode([
+                "status" => "ERROR",
+                "message" => "A pass has already been generated for this advocate for the same court, item, and date."
+            ]);
+            return;
+        }
         // Generate pass no
         $pass_no = $cltype . date("dmY", strtotime($cldt)) . $courtno . $itemno . date("His");
 
@@ -506,27 +523,55 @@ class PassController extends BaseController
     {
         $this->requireRole([10]);
         $this->requireAuth();
-        $cino      = $_POST["cino"]      ?? '';
-        $adv_type  = $_POST["adv_type"]  ?? '';
-        $cldt      = $_POST["cldt"]      ?? '';
-        $cltype    = $_POST["cltype"]    ?? '';
-        $courtno   = $_POST["courtno"]   ?? '';
-        $itemno    = $_POST["itemno"]    ?? '';
-        $party     = $_POST["party"]     ?? '';
-        $passfor   = $_POST["passfor"]   ?? '';
-        $partyno   = $_POST["partyno"]   ?? '';
-        $partynm   = $_POST["lit_name"]   ?? '';
-        $partymob  = $_POST["lit_mobile"]  ?? '';
-        $adv_code  = $_POST["recommended_code"]  ?? '';
+        $cino      = $this->decodeField($_POST["cino"])      ?? '';
+        $adv_type  = $this->decodeField($_POST["adv_type"])  ?? '';
+        $cldt      = $this->decodeField($_POST["cldt"])      ?? '';
+        $cltype    = $this->decodeField($_POST["cltype"])   ?? '';
+        $courtno   = $this->decodeField($_POST["courtno"])  ?? '';
+        $itemno    = $this->decodeField($_POST["itemno"])    ?? '';
+        $party     = $this->decodeField($_POST["party"])    ?? '';
+        $passfor   = $this->decodeField($_POST["passfor"])   ?? '';
+        $partyno   = $this->decodeField($_POST["partyno"])   ?? '';
+        $partynm   = $this->decodeField($_POST["lit_name"])  ?? '';
+        $partymob  = $this->decodeField($_POST["lit_mobile"]) ?? '';
+        $adv_code  = $this->decodeField($_POST["recommended_code"]) ?? '';
         $user_ip  = $_SESSION["admin_user"]["username"];
+        // VALID MOBILE
+        if (!preg_match('/^[6-9][0-9]{9}$/', $partymob)) {
+            echo json_encode(["status" => "ERROR", "message" => "Invalid mobile number."]);
+            return;
+        }
         $partymob = $this->getEncryptValue($partymob);
 
+        if ($partynm === "" || $partymob === "") {
+            echo json_encode(["status" => "ERROR", "message" => "Litigant name and mobile are required."]);
+            return;
+        }
+
+
+        // ===== DUPLICATE CHECK =====
+        $model = new Pass();
+        $exists = $model->checkLitigantPassExists(
+            $this->decodeField($_POST['lit_mobile']),
+            $this->decodeField($_POST['courtno']),
+            $this->decodeField($_POST['itemno']),
+            $this->decodeField($_POST['cldt']),
+            $this->decodeField($_POST['recommended_code'])
+        );
+
+        if ($exists) {
+            echo json_encode([
+                "status" => "ERROR",
+                "message" => "Litigant already has a pass <b>" .  $this->decodeField($_POST['cldt'])  . "</b> for this court & item (recommended by same advocate)."
+            ]);
+            return;
+        }
         // Generate pass no
         $pass_no = $cltype . date("dmY", strtotime($cldt)) . $courtno . $itemno . date("His");
 
         // Advocate details
         $advDetails = $this->getAdvocateDetails($adv_code);
-        $paddress    = $_POST["lit_address"]  ?? '';
+        $paddress    = $this->decodeField($_POST["lit_address"])  ?? '';
         $adv_enroll  = $advDetails['enroll_num']  ?? null;
         $sql = "INSERT INTO gatepass_details
             (cino, causelist_dt, causelist_type, court_no, item_no, pass_no, adv_type, 
@@ -568,22 +613,49 @@ class PassController extends BaseController
         $this->requireAuth();
 
         // POST fields
-        $cino      = $_POST["cino"]      ?? '';
+        $cino      = $this->decodeField($_POST["cino"])      ?? '';
         $adv_type  = null; // FIX: PIP has NO advocate → must be NULL, NOT "P"
-        $cldt      = $_POST["cldt"]      ?? '';
-        $cltype    = $_POST["cltype"]    ?? '';
-        $courtno   = intval($_POST["courtno"] ?? 0);
-        $itemno    = $_POST["itemno"] ?? '';  // varchar in DB
+        $cldt      = $this->decodeField($_POST["cldt"])      ?? '';
+        $cltype    = $this->decodeField($_POST["cltype"])    ?? '';
+        $courtno   = intval($this->decodeField($_POST["courtno"]) ?? 0);
+        $itemno    = $this->decodeField($_POST["itemno"]) ?? '';  // varchar in DB
 
         // PIP fixed values
         $party     = null; // you requested NULL
         $partyno   = 0;
 
-        $passfor   = $_POST["passfor"]   ?? 'P';
-        $partynm   = $_POST["partynm"]   ?? '';
-        $partymob  = $_POST["partymob"]  ?? '';
-        $paddress  = $_POST["paddress"]  ?? '';
+        $passfor   = $this->decodeField($_POST["passfor"])   ?? 'P';
+        $partynm   = $this->decodeField($_POST["partynm"])   ?? '';
+        $partymob  = $this->decodeField($_POST["partymob"])  ?? '';
+        $paddress  = $this->decodeField($_POST["paddress"])  ?? '';
         $user_ip   = $_SESSION["admin_user"]["username"];
+        if ($partynm === "" || $partymob === "") {
+            echo json_encode(["status" => "ERROR", "message" => "Party name and mobile are required."]);
+            return;
+        }
+        // Validate mobile length
+        if (!preg_match('/^[6-9][0-9]{9}$/', $partymob)) {
+            echo json_encode(["status" => "ERROR", "message" => "Invalid mobile number."]);
+            return;
+        }
+        $userModel = new User();
+        $exists = $userModel->checkPartyExists($partynm, $partymob);
+
+        if (!$exists) {
+            echo json_encode([
+                "status"  => "ERROR",
+                "message" => "Party not registered as Party-in-Person. Please register first."
+            ]);
+            return;
+        }
+        $passModel = new Pass();
+        if ($passModel->isPipPassExists($cino, $partynm, $partymob, $courtno, $itemno, $cldt)) {
+            echo json_encode([
+                "status" => "ERROR",
+                "message" => "Pass already generated for this Party for the same court/item/date."
+            ]);
+            return;
+        }
 
         // Encrypt mobile
         $partymob = $this->getEncryptValue($partymob);
@@ -966,10 +1038,10 @@ class PassController extends BaseController
         $this->requireRole([10]);
         header("Content-Type: application/json");
 
-        $enroll   = trim($_POST['enroll'] ?? '');
-        $sections = $_POST['sections'] ?? [];
-        $remarks  = $_POST['purpose'] ?? [];
-        $pass_dt = $_POST['visit_date'] ?? date("Y-m-d");
+        $enroll   = trim($this->decodeField($_POST['enroll']) ?? '');
+        $sections = $this->decodeFieldJson($_POST['sections']) ?? [];
+        $remarks  = $this->decodeFieldJson($_POST['purpose']) ?? [];
+        $pass_dt = $this->decodeField($_POST['visit_date']) ?? date("Y-m-d");
 
         if ($enroll == "" || empty($sections)) {
             echo json_encode([
@@ -998,20 +1070,23 @@ class PassController extends BaseController
 
         foreach ($sections as $sid) {
             $remarkList[] = [
-                "purpose" => $sid,               // section ID
-                "remark"  => $remarks[$sid] ?? ""  // correct variable
+                "purpose" => $sid,
+                "remark"  => $remarks[$sid] ?? ""
             ];
         }
-
-
         $remarkJson = json_encode($remarkList);
-
-        // Pass creation fields
         $passNo  = date("dmY") . date("His");
         $userid  = $_SESSION['admin_user']['id'];
 
         $model = new Pass();
-
+        if ($model->advocateSectionPassExists($enroll, $pass_dt)) {
+            echo json_encode([
+                "status"  => "ERROR",
+                "message" => "A section pass for this advocate is already generated for " .
+                    date("d-m-Y", strtotime($pass_dt)) . "."
+            ]);
+            return;
+        }
         $ok = $model->saveAdvocateSectionRaw([
             "pass_dt"     => $pass_dt,
             "userid"      => $userid,
@@ -1044,13 +1119,14 @@ class PassController extends BaseController
         $this->requireAuth();
         $this->requireRole([10]);
         header("Content-Type: application/json");
-        $enroll   = trim($_POST['enroll'] ?? '');
-        $sections = $_POST['sections'] ?? [];
-        $remarks  = $_POST['purpose'] ?? [];
-        $pass_dt = $_POST['visit_date'] ?? date("Y-m-d");
-        $litigantname = $_POST['lit_name'] ?? '';
-        $litigantmobile = $_POST['lit_mobile'] ?? '';
-        $litigant_address = $_POST['lit_address'] ?? '';
+        $enroll   = trim($this->decodeField($_POST['enroll']) ?? '');
+        $sections = $this->decodeFieldJson($_POST['sections']) ?? [];
+        $remarks  =  $this->decodeFieldJson($_POST['purpose']) ?? [];
+        $pass_dt = $this->decodeField($_POST['visit_date']) ?? date("Y-m-d");
+        $litigantname = $this->decodeField($_POST['lit_name']) ?? '';
+        $litigantmobile = $this->decodeField($_POST['lit_mobile']) ?? '';
+        $litigant_address = $this->decodeField($_POST['lit_address']) ?? '';
+
         $litigantmobile = $this->getEncryptValue($litigantmobile);
         if ($enroll == "" || empty($sections)) {
             echo json_encode([
@@ -1070,6 +1146,18 @@ class PassController extends BaseController
             ]);
             return;
         }
+
+
+        $model = new Pass();
+
+        // DUPLICATE CHECK (before saving)
+        if ($model->checkLitigantSectionDuplicate($this->decodeField($_POST["lit_mobile"]), $pass_dt, $adv["adv_code"])) {
+            echo json_encode([
+                "status" => "ERROR",
+                "message" => "A section pass already exists today for this litigant recommended by this advocate."
+            ]);
+            return;
+        }
         $purposeIds = implode(",", $sections);
         $remarkList = [];
 
@@ -1082,9 +1170,6 @@ class PassController extends BaseController
         $remarkJson = json_encode($remarkList);
         $passNo  = date("dmY") . date("His");
         $userid  = $_SESSION['admin_user']['id'];
-
-        $model = new Pass();
-
         $ok = $model->saveLitigantSectionRaw([
             "pass_dt"     => $pass_dt,
             "userid"      => $userid,
@@ -1120,12 +1205,12 @@ class PassController extends BaseController
         $this->requireRole([10]);
         header("Content-Type: application/json");
 
-        $sections = $_POST['sections'] ?? [];
-        $remarks  = $_POST['purpose'] ?? [];
-        $pass_dt = $_POST['visit_date'] ?? date("Y-m-d");
-        $litigantname = $_POST['pip_name'] ?? '';
-        $litigantmobile = $_POST['pip_mobile'] ?? '';
-        $litigant_address = $_POST['pip_address'] ?? '';
+        $sections = $this->decodeFieldJson($_POST['sections']) ?? [];
+        $remarks  = $this->decodeFieldJson($_POST['purpose']) ?? [];
+        $pass_dt = $this->decodeField($_POST['visit_date']) ?? date("Y-m-d");
+        $litigantname = $this->decodeField($_POST['pip_name']) ?? '';
+        $litigantmobile = $this->decodeField($_POST['pip_mobile']) ?? '';
+        $litigant_address =$this->decodeField( $_POST['pip_address']) ?? '';
         $litigantmobile = $this->getEncryptValue($litigantmobile);
         if (empty($sections)) {
             echo json_encode([
@@ -1148,6 +1233,38 @@ class PassController extends BaseController
         $userid  = $_SESSION['admin_user']['id'];
 
         $model = new Pass();
+        if ($this->decodeField($_POST['pip_name']) === "" || $this->decodeField($_POST['pip_mobile']) === "") {
+            echo json_encode(["status" => "ERROR", "message" => "Party name and mobile are required."]);
+            return;
+        }
+        // Validate mobile length
+        if (!preg_match('/^[6-9][0-9]{9}$/',  $this->decodeField($_POST['pip_mobile']))) {
+            echo json_encode(["status" => "ERROR", "message" => "Invalid mobile number."]);
+            return;
+        }
+        $userModel = new User();
+        $exists = $userModel->checkPartyExists($this->decodeField($_POST['pip_name']), $this->decodeField($_POST['pip_mobile']));
+
+        if (!$exists) {
+
+            echo json_encode([
+                "status"  => "ERROR",
+                "message" => "Party not registered as Party-in-Person. Please register first."
+            ]);
+            return;
+        }
+        $passModel = new Pass();
+        if ($passModel->checkPIPSectionDuplicate($this->decodeField($_POST["pip_mobile"]), $pass_dt)) {
+            echo json_encode([
+                "status" => "ERROR",
+                "message" => "A section pass already exists <b>" . $pass_dt . "</b> for this Party-in-Person."
+            ]);
+            return;
+        }
+
+
+
+
 
         $ok = $model->saveLitigantSectionRaw([
             "pass_dt"     => $pass_dt,

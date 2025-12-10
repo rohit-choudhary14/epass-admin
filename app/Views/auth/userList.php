@@ -1,60 +1,67 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
 
 <style>
-    body{
-      padding: 0px !important;
+    body {
+        padding: 0px !important;
         margin: 0px !important;
     }
-.user-container {
-    background:#fff;
-    padding:25px;
-    max-width:1250px;
-    margin:30px auto;
-    border-radius:12px;
-    border:1px solid #e5e7eb;
-    box-shadow:0 3px 12px rgba(0,0,0,0.08);
-}
 
-h2 {
-    font-size:28px;
-    font-weight:700;
-    margin-bottom:22px;
-    color:#111827;
-}
+    .user-container {
+        background: #fff;
+        padding: 25px;
+        max-width: 1250px;
+        margin: 30px auto;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+    }
 
-.top-actions {
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:20px;
-}
+    h2 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 22px;
+        color: #111827;
+    }
 
-.add-btn {
-    background:#2563eb;
-    color:white;
-    padding:10px 18px;
-    border-radius:8px;
-    font-weight:600;
-    text-decoration:none;
-}
+    .top-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
 
-.add-btn:hover {
-    background:#1d4ed8;
-}
+    .add-btn {
+        background: #2563eb;
+        color: white;
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+    }
 
-#userTable {
-    width:100% !important;
-}
+    .add-btn:hover {
+        background: #1d4ed8;
+    }
 
-.view-link, .edit-link, .delete-link {
-    font-weight:600;
-    cursor:pointer;
-    margin-right:10px;
-}
+    #userTable {
+        width: 100% !important;
+    }
 
-.edit-link { color:#1d4ed8; }
-.delete-link { color:#dc2626; }
+    .view-link,
+    .edit-link,
+    .delete-link {
+        font-weight: 600;
+        cursor: pointer;
+        margin-right: 10px;
+    }
 
+    .edit-link {
+        color: #1d4ed8;
+    }
+
+    .delete-link {
+        color: #dc2626;
+    }
 </style>
 
 <div class="user-container">
@@ -76,34 +83,41 @@ h2 {
                 <th>Email</th>
                 <th>Contact</th>
                 <th>Status</th>
+                <th>Establishment</th>
                 <th>Action</th>
             </tr>
         </thead>
 
         <tbody>
-            <?php foreach($users as $u): ?>
+            <?php foreach ($users as $u): ?>
                 <tr>
                     <td><?= $u['id'] ?></td>
                     <td><?= htmlspecialchars($u['username']) ?></td>
                     <td><?= htmlspecialchars($u['name']) ?></td>
 
                     <td>
-    <?php 
-        $type = $u['type'] ?? null;
-        if ($type == 1) {
-            echo '<span style="color:green;font-weight:600;">Admin</span>';
-        } elseif ($type == 10) {
-            echo '<span style="color:#2563eb;font-weight:600;">Officer</span>';
-        } else {
-            echo '<span style="color:gray;">Unknown</span>';
-        }
-    ?>
-</td>
+                        <?php
+                        $type = $u['type'] ?? null;
+                        if ($type == 1) {
+                            echo '<span style="color:green;font-weight:600;">Admin</span>';
+                        } elseif ($type == 10) {
+                            echo '<span style="color:#2563eb;font-weight:600;">Officer</span>';
+                        } else {
+                            echo '<span style="color:gray;">Unknown</span>';
+                        }
+                        ?>
+                    </td>
 
-<td><?= htmlspecialchars($u['email'] ?? '—') ?></td>
-<td><?= htmlspecialchars($u['contact'] ?? '—') ?></td>
+                    <td><?= htmlspecialchars($u['email'] ?? '—') ?></td>
+                    <td><?= htmlspecialchars($u['contact'] ?? '—') ?></td>
 
-<td><?= ($u['status'] ?? 0) ? 'Active' : 'Inactive' ?></td>
+                    <td><?= ($u['status'] ?? 0) ? 'Active' : 'Inactive' ?></td>
+                    <td>
+                        <?php
+                        $est = $u['estt'] ?? '';
+                        echo ($est === 'P') ? 'Jodhpur' : 'Jaipur';
+                        ?>
+                    </td>
 
 
                     <td>
@@ -118,13 +132,15 @@ h2 {
 </div>
 
 <script>
-$(document).ready(function() {
-    $('#userTable').DataTable({
-        responsive: true,
-        pageLength: 10,
-        order: [[0, 'desc']]
+    $(document).ready(function() {
+        $('#userTable').DataTable({
+            responsive: true,
+            pageLength: 10,
+            order: [
+                [0, 'desc']
+            ]
+        });
     });
-});
 </script>
 
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

@@ -2,10 +2,11 @@
 
 <style>
     /* WRAPPER */
-    body{
-        padding: 0px !important ;
-        margin: 0px !important ;
+    body {
+        padding: 0px !important;
+        margin: 0px !important;
     }
+
     .form-wrapper {
         max-width: 900px;
         margin: 32px auto;
@@ -261,86 +262,76 @@
         $("#sectionPassForm").on("submit", function(e) {
             e.preventDefault();
 
-            
+            $("#form-message").html("");
+
             let enroll = $("input[name='enroll']").val().trim();
             let sections = $("#sections").val();
 
-            $("#form-message").html(""); // reset
-
-            // ==========================
-            // FRONTEND VALIDATION
-            // ==========================
-
             if (enroll === "") {
-                $("#form-message").html(`
-                <div class='msg-error'>Please fill all required fields.</div>
-            `);
+                showError("Please fill all required fields.");
                 return;
             }
 
             if (!sections || sections.length === 0) {
-                $("#form-message").html(`
-                <div class='msg-error'>Please select at least one section.</div>
-            `);
+                showError("Please select at least one section.");
                 return;
             }
 
-            // CHECK purpose for each selected section
             for (let id of sections) {
                 let purpose = $(`input[name='purpose[${id}]']`).val()?.trim();
-
                 if (!purpose || purpose === "") {
-                    $("#form-message").html(`
-                    <div class='msg-error'>
-                        Please enter purpose for selected section.
-                    </div>
-                `);
+                    showError("Please enter purpose for selected section.");
                     return;
                 }
             }
 
-            // ==========================
-            // ALL GOOD → SEND AJAX
-            // ==========================
+            // ---------- 🔐 ENCRYPT ALL VALUES BEFORE SUBMITTING ----------
+            let encryptedData = {};
 
-            let formData = $("#sectionPassForm").serialize();
-             showLoader();
+            encryptedData["enroll"] = safeEncode(enroll);
+            encryptedData["visit_date"] = safeEncode($("input[name='visit_date']").val());
+
+            // encrypt sections array as JSON
+            encryptedData["sections"] = safeEncode(JSON.stringify(sections));
+
+            // encrypt purpose remarks
+            let purposes = {};
+            sections.forEach(id => {
+                purposes[id] = $(`input[name='purpose[${id}]']`).val().trim();
+            });
+
+            encryptedData["purpose"] = safeEncode(JSON.stringify(purposes));
+
+            showLoader();
+
             $.ajax({
                 url: "/HC-EPASS-MVC/public/index.php?r=pass/saveAdvocateSection",
                 type: "POST",
-                data: formData,
+                data: encryptedData, // 🔥 ENCRYPTED DATA ONLY
                 dataType: "json",
+
                 success: function(res) {
-                        hideLoader();
+                    hideLoader();
+
                     if (res.status === "ERROR") {
-                        $("#form-message").html(`
-                        <div class='msg-error'>${res.message}</div>
-                    `);
+                        showError(res.message || "Something went wrong.");
                         return;
                     }
 
-                    if (res.status === "OK") {
-                        $("#form-message").html(`
-                        <div class='msg-success'>Pass Generated Successfully! Redirecting...</div>
-                    `);
+                    showSuccess("Pass Generated Successfully! Redirecting...");
 
-                        setTimeout(() => {
-                            window.location.href = res.redirect;
-                        }, 1200);
-                    }
+                    setTimeout(() => {
+                        window.location.href = res.redirect;
+                    }, 1500);
                 },
 
                 error: function(xhr) {
                     hideLoader();
-                    $("#form-message").html(`
-                    <div class='msg-error'>
-                        Server Error: ${xhr.responseText}
-                    </div>
-                `);
+                    showError("Server Error: " + (xhr.responseText || "Unable to connect."));
                 }
             });
-
         });
+
 
     });
 </script>

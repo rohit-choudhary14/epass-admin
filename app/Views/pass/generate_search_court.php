@@ -380,63 +380,56 @@
             });
     });
 
-    // -------------------------------
-    // GENERATE PASS FORM
-    // -------------------------------
     function submitPassData(encodedData, advName, advSide) {
-
-        console.log("🔍 submitPassData() called");
-        console.log("Raw Encoded Data:", encodedData);
-        console.log("Adv Name:", advName);
-        console.log("Adv Side (RAW):", advSide);
 
         let data = JSON.parse(decodeURIComponent(encodedData));
 
-        // DEBUG: Log parsed case data
-        console.log("Parsed Case Data:", data);
-
-        // DEBUG: If advSide is too long → ERROR FOUND
-        if (advSide.length > 4) {
-            console.error("❌ ERROR: advSide is too long for DB:", advSide);
-        }
-
         let fd = new FormData();
 
-        fd.append("cino", data.cino);
-        fd.append("adv_type", advSide);
-        fd.append("adv_name", advName);
-        fd.append("courtno", data.court_no);
-        fd.append("itemno", data.item_no);
-        fd.append("cldt", data.cl_date);
-        fd.append("cltype", data.cl_type);
-        fd.append("paddress", document.getElementById("paddress").value);
-        fd.append("partyno", document.getElementById("partyno").value);
-        fd.append("partynm", document.getElementById("partynm").value);
-        fd.append("partymob", document.getElementById("partymob").value);
-        fd.append("passfor", document.getElementById("passfor").value);
-        fd.append("adv_code", document.getElementById("adv_code").value);
+        // Encrypt everything before sending
+        fd.append("cino", safeEncode(data.cino));
+        fd.append("adv_type", safeEncode(advSide));
+        fd.append("adv_name", safeEncode(advName));
+        fd.append("courtno", safeEncode(data.court_no));
+        fd.append("itemno", safeEncode(data.item_no));
+        fd.append("cldt", safeEncode(data.cl_date));
+        fd.append("cltype", safeEncode(data.cl_type));
+        fd.append("paddress", safeEncode(document.getElementById("paddress").value));
+        fd.append("partyno", safeEncode(document.getElementById("partyno").value));
+        fd.append("partynm", safeEncode(document.getElementById("partynm").value));
+        fd.append("partymob", safeEncode(document.getElementById("partymob").value));
+        fd.append("passfor", safeEncode(document.getElementById("passfor").value));
+        fd.append("adv_code", safeEncode(document.getElementById("adv_code").value));
 
-        // Print the entire form data
-        console.log("📤 FormData being sent:");
-        for (let pair of fd.entries()) {
-            console.log(pair[0] + ":", pair[1]);
-        }
         showLoader();
+
         fetch("/HC-EPASS-MVC/public/index.php?r=pass/generateCourt", {
                 method: "POST",
                 body: fd
             })
             .then(res => res.json())
-            .then(data => {
+            .then(response => {
                 hideLoader();
-                console.log("🎯 Server Response:", data);
-                alert("Pass Generated Successfully! PASS NO: " + data.pass_no);
+
+                if (response.status === "ERROR") {
+                    showError(response.message || "Something went wrong.");
+                    return;
+                }
+
+                showSuccess("Pass Generated Successfully! <br> PASS NO: <b>" + response.pass_no + "</b>");
+
+                setTimeout(() => {
+                    window.location.href = "/HC-EPASS-MVC/public/index.php?r=pass/myPasses";
+                }, 1500);
             })
             .catch(err => {
-                console.error("❌ Fetch Error:", err);
-                alert("Error generating pass");
+                hideLoader();
+                showError("Unable to connect to server.");
             });
+
     }
+
+
 
     function openPassForm(encodedData) {
 

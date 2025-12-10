@@ -4,7 +4,22 @@ require_once __DIR__ . '/BaseModel.php';
 class Pass extends BaseModel
 {
 
-
+    function getEncryptValue($input)
+    {
+        $password = 'Hcraj@123';
+        $method = 'AES-256-CBC';
+        $password = substr(hash('SHA256', $password, true), 0, 32);
+        $iv = chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0);
+        return base64_encode(openssl_encrypt($input, $method, $password, OPENSSL_RAW_DATA, $iv));
+    }
+    function getDecryptValue($input)
+    {
+        $password = 'Hcraj@123';
+        $method = 'AES-256-CBC';
+        $password = substr(hash('SHA256', $password, true), 0, 32);
+        $iv = chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0) . chr(0x0);
+        return openssl_decrypt(base64_decode($input), $method, $password, OPENSSL_RAW_DATA, $iv);
+    }
     public function list($from = null, $to = null, $limit = null)
     {
         $sql = "SELECT id, pass_no, passfor, passtype,
@@ -395,10 +410,10 @@ class Pass extends BaseModel
         return $stmt->fetchAll();
     }
 
-  
-  
-   
-   
+
+
+
+
     public function getPurposeName($id)
     {
         $stmt = $this->pdo->prepare("SELECT purpose FROM gatepass_purpose_visit WHERE id = :id");
@@ -406,7 +421,7 @@ class Pass extends BaseModel
         return $stmt->fetchColumn();
     }
 
-   
+
     public function fetchCourtCase($type, $no, $year, $clType, $clDate)
     {
         $sql = "
@@ -522,7 +537,7 @@ class Pass extends BaseModel
             ":userid"           => $data["userid"],
             ":userip"           => $data["userip"],
             ":purpose_of_visit" => $data["purpose_ids"],
-            ":purposermks"      => $data["remarks"], 
+            ":purposermks"      => $data["remarks"],
             ":passfor"          => $data["passfor"],
             ":passtype"         => $data["passtype"],
             ":litigantname"     => $data["litigantname"],
@@ -531,5 +546,157 @@ class Pass extends BaseModel
         ]);
 
         return $stmt->fetchColumn();
+    }
+
+
+    public function isPipPassExists($cino, $partyName, $partyMobile, $courtNo, $itemNo, $cldt)
+    {
+        $sql = "SELECT pass_no, party_mob_no FROM gatepass_details
+            WHERE cino = :cino
+            AND court_no = :court
+            AND item_no = :item
+            AND party_name = :pname
+            AND causelist_dt = :cldt
+            AND passfor = 'P'
+            AND passtype = 3";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            ":cino"  => $cino,
+            ":court" => intval($courtNo),
+            ":item"  => $itemNo,
+            ":pname" => $partyName,
+            ":cldt"  => date("Y-m-d", strtotime($cldt)),
+        ]);
+
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        if (!$rows) return false;
+
+        // decrypt match logic
+        foreach ($rows as $r) {
+            $decMob = $this->decryptData($r["party_mob_no"]);
+            if ($decMob == $partyMobile) return true;
+        }
+
+        return false;
+    }
+
+    public function isAdvocatePassExists($cino, $advCode, $courtNo, $itemNo, $cldt)
+    {
+        $sql = "SELECT pass_no FROM gatepass_details
+            WHERE cino = :cino
+            AND adv_code = :adv
+            AND court_no = :court
+            AND item_no = :item
+            AND causelist_dt = :cldt
+            AND passtype = 2  
+            LIMIT 1";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            ":cino" => $cino,
+            ":adv"  => $advCode,
+            ":court" => $courtNo,
+            ":item"  => $itemNo,
+            ":cldt"  => date("Y-m-d", strtotime($cldt))
+        ]);
+
+        return $stmt->fetchColumn() ? true : false;
+    }
+
+    public function advocateSectionPassExists($enroll, $date)
+    {
+        $sql = "SELECT id FROM gatepass_details_section
+            WHERE enroll_no = :enroll
+            AND pass_dt = :dt AND passfor = 'S'
+            LIMIT 1";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            ":enroll" => $enroll,
+            ":dt"     => $date
+        ]);
+
+        return $stmt->fetchColumn() ? true : false;
+    }
+
+    public function checkLitigantPassExists($mobile, $courtno, $itemno, $cldt, $adv_code)
+    {
+        $sql = "SELECT party_mob_no, pass_no
+            FROM gatepass_details
+            WHERE court_no = :courtno
+            AND item_no = :itemno
+            AND causelist_dt = :cldt
+            AND passtype = 2
+            AND passfor = 'L'
+            AND adv_code = :adv_code";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            ":courtno"  => $courtno,
+            ":itemno"   => $itemno,
+            ":cldt"     => date("Y-m-d", strtotime($cldt)),
+            ":adv_code" => $adv_code
+        ]);
+
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($rows as $r) {
+            $decMob = $this->decryptData($r["party_mob_no"]);
+            if ($decMob == $mobile) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    public function checkLitigantSectionDuplicate($litigantMobile, $pass_dt, $adv_cd)
+    {
+        $sql = "SELECT litigantmobile 
+            FROM gatepass_details_section
+            WHERE pass_dt = :pass_dt
+            AND passfor = 'LS'
+            AND adv_cd = :adv_cd";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            ":pass_dt" => $pass_dt,
+            ":adv_cd"  => $adv_cd
+        ]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($rows as $r) {
+            $decMob = $this->decryptData($r["litigantmobile"]);
+
+            if ($decMob == $litigantMobile) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public function checkPIPSectionDuplicate($partyMobile, $pass_dt)
+    {
+       
+        $sql = "SELECT litigantmobile
+            FROM gatepass_details_section
+            WHERE pass_dt = :pass_dt
+            AND passfor = 'PS'"; 
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            ":pass_dt" => $pass_dt
+        ]);
+
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($rows as $r) {
+
+            // decrypt stored mobile
+            $decMob = $this->decryptData($r["litigantmobile"]);
+
+            // compare with plain mobile input
+            if ($decMob == $partyMobile) {
+                return true; // duplicate exists
+            }
+        }
+
+        return false;
     }
 }

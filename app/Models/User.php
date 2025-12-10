@@ -62,7 +62,7 @@ class User extends BaseModel
 
     public function getAllUsers()
     {
-        $sql = "SELECT id, username, name, email, contact_num, role_id, status 
+        $sql = "SELECT id, username, name, email, contact_num, role_id, status,estt 
             FROM gatepass_users 
             WHERE role_id = 10 
             ORDER BY id DESC";
@@ -80,19 +80,19 @@ class User extends BaseModel
                 'email'    => $this->decryptData($r['email']),
                 'contact'  => $this->decryptData($r['contact_num']),
                 'type'     => $r['role_id'],
-                'status'   => $r['status']
+                'status'   => $r['status'],
+                'estt'     => $r['estt']
             ];
         }
-
         return $output;
     }
 
-    public function createOfficer($username, $name, $gender, $email, $contact, $password, $type)
+    public function createOfficer($username, $name, $gender, $email, $contact, $password, $type, $estt)
     {
         $sql = "INSERT INTO gatepass_users 
-            (username, name, gender, email, password, contact_num, address, status, ip, created, role_id)
+            (username, name, gender, email, password, contact_num, address, status, ip, created, role_id,estt)
             VALUES
-            (:username, :name, :gender, :email, :password, :contact, '', 1, :ip, NOW(), :role_id)
+            (:username, :name, :gender, :email, :password, :contact, '', 1, :ip, NOW(), :role_id, :estt)
             RETURNING id";
 
         $stmt = $this->pdo->prepare($sql);
@@ -105,7 +105,29 @@ class User extends BaseModel
             ':password' => $this->encryptData($password),
             ':contact'  => $this->encryptData($contact),
             ':ip'       => $_SERVER['REMOTE_ADDR'] ?? '',
-            ':role_id'  => 10
+            ':role_id'  => 10,
+            ':estt'     => $estt
         ]);
+    }
+    public function checkPartyExists($name, $mobile)
+    {
+        $sql = "SELECT id, contact_num FROM gatepass_users 
+            WHERE LOWER(name) = LOWER(:name)
+            AND passtype = 3 AND role_id=2"; 
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([":name" => trim($name)]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        if (!$rows) return false;
+        
+        foreach ($rows as $row) {
+
+            $decMob = $this->decryptData($row["contact_num"]);
+          
+            if ($decMob == trim($mobile)) {
+             
+                return true; 
+            }
+        }
+        return false; 
     }
 }

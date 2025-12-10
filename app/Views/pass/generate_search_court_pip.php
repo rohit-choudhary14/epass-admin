@@ -176,35 +176,35 @@
     <div id="case-title" style="display:none;margin-top:10px;font-size:16px;font-weight:600;color:#4f46e5;"></div>
 
     <div id="case-result"></div>
-<!-- ================= NOTICE MODAL ================= -->
-<div class="modal fade" id="noticeModal" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content" style="border-radius:12px;">
+    <!-- ================= NOTICE MODAL ================= -->
+    <div class="modal fade" id="noticeModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border-radius:12px;">
 
-     <div class="modal-header" style="justify-content:center;">
-    <h4 class="modal-title" style="color:#d00000; font-weight:800; text-align:center;">
-        NOTICE
-    </h4>
-</div>
+                <div class="modal-header" style="justify-content:center;">
+                    <h4 class="modal-title" style="color:#d00000; font-weight:800; text-align:center;">
+                        NOTICE
+                    </h4>
+                </div>
 
 
-      <div class="modal-body" style="font-size:20px; color:#d00000; line-height:1.6; text-align:center;">
-        पार्टी-इन-पर्सन के पास के लिए केवल वे पक्षकार ही रजिस्ट्रेशन कर सकते हैं एवं ई-पास बना सकते हैं,
-        जिनका कोई अधिवक्ता नहीं है और उन्हें खुद ही अपने प्रकरण की पैरोवी करनी है।
-        ऐसे पक्षकार जिन्होंने अधिवक्ता के माध्यम से प्रकरण दायर किया है,
-        वे पार्टी-इन-पर्सन में रजिस्ट्रेशन नहीं करें एवं ई-पास नहीं बनायें।
-      </div>
+                <div class="modal-body" style="font-size:20px; color:#d00000; line-height:1.6; text-align:center;">
+                    पार्टी-इन-पर्सन के पास के लिए केवल वे पक्षकार ही रजिस्ट्रेशन कर सकते हैं एवं ई-पास बना सकते हैं,
+                    जिनका कोई अधिवक्ता नहीं है और उन्हें खुद ही अपने प्रकरण की पैरोवी करनी है।
+                    ऐसे पक्षकार जिन्होंने अधिवक्ता के माध्यम से प्रकरण दायर किया है,
+                    वे पार्टी-इन-पर्सन में रजिस्ट्रेशन नहीं करें एवं ई-पास नहीं बनायें।
+                </div>
 
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
-                style="padding:8px 25px; font-size:18px;">
-          Close
-        </button>
-      </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
+                        style="padding:8px 25px; font-size:18px;">
+                        Close
+                    </button>
+                </div>
 
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
 </div>
 
@@ -254,19 +254,19 @@
     });
 
     /* ---------------------- SHOW CASE FOR LITIGANT ---------------------- */
-/* ---------------------- SHOW PIP CASE ---------------------- */
-function showPipCase(data) {
+    /* ---------------------- SHOW PIP CASE ---------------------- */
+    function showPipCase(data) {
 
-    let box = document.getElementById("case-result");
+        let box = document.getElementById("case-result");
 
-    if (data.status !== "OK") {
+        if (data.status !== "OK") {
+            box.style.display = "block";
+            box.innerHTML = `<p style="color:red;font-weight:bold">${data.message}</p>`;
+            return;
+        }
+
         box.style.display = "block";
-        box.innerHTML = `<p style="color:red;font-weight:bold">${data.message}</p>`;
-        return;
-    }
-
-    box.style.display = "block";
-    box.innerHTML = `
+        box.innerHTML = `
         <div class="result-title">Case Found</div>
 
         <p><b>Court Room:</b> ${data.court_no}</p>
@@ -286,26 +286,26 @@ function showPipCase(data) {
             Continue
         </button>
     `;
-}
-
-/* ---------------------- CHECK DECLARATION ---------------------- */
-function validatePIP(encoded) {
-    let cb = document.getElementById("pip_declaration");
-
-    if (!cb.checked) {
-        alert("Please confirm that you are appearing as Party-in-Person.");
-        return;
     }
 
-    openPIPForm(encoded);
-}
+    /* ---------------------- CHECK DECLARATION ---------------------- */
+    function validatePIP(encoded) {
+        let cb = document.getElementById("pip_declaration");
 
-/* ---------------------- OPEN PIP FORM ---------------------- */
-function openPIPForm(encoded) {
+        if (!cb.checked) {
+            alert("Please confirm that you are appearing as Party-in-Person.");
+            return;
+        }
 
-    let data = JSON.parse(decodeURIComponent(encoded));
+        openPIPForm(encoded);
+    }
 
-    document.getElementById("case-result").innerHTML = `
+    /* ---------------------- OPEN PIP FORM ---------------------- */
+    function openPIPForm(encoded) {
+
+        let data = JSON.parse(decodeURIComponent(encoded));
+
+        document.getElementById("case-result").innerHTML = `
         <div class="new-pass-box">
             <h3 class="pass-title">Generate Party-in-Person Pass</h3>
 
@@ -330,57 +330,74 @@ function openPIPForm(encoded) {
             </button>
         </div>
     `;
-}
+    }
 
-/* ---------------------- VALID MOBILE ---------------------- */
-function isValidMobile(mob) {
-    return /^[6-9][0-9]{9}$/.test(mob);
-}
+    /* ---------------------- VALID MOBILE ---------------------- */
+    function isValidMobile(mob) {
+        return /^[6-9][0-9]{9}$/.test(mob);
+    }
 
-/* ---------------------- SUBMIT PIP PASS ---------------------- */
-function submitPIP(encoded) {
+    /* ---------------------- SUBMIT PIP PASS ---------------------- */
+    function submitPIP(encoded) {
 
-    let data = JSON.parse(decodeURIComponent(encoded));
+        let data = JSON.parse(decodeURIComponent(encoded));
 
-    let name = document.getElementById("pip_name").value.trim();
-    let mobile = document.getElementById("pip_mobile").value.trim();
-    let address = document.getElementById("pip_address").value.trim();
+        let name = document.getElementById("pip_name").value.trim();
+        let mobile = document.getElementById("pip_mobile").value.trim();
+        let address = document.getElementById("pip_address").value.trim();
 
-    if (name === "") { alert("Name cannot be empty."); return; }
-    if (!isValidMobile(mobile)) { alert("Enter valid Indian mobile number."); return; }
-    if (address === "") { alert("Address cannot be empty."); return; }
+        // VALIDATION
+        if (name === "") return showError("Name cannot be empty.");
+        if (!isValidMobile(mobile)) return showError("Enter a valid Indian mobile number.");
+        if (address === "") return showError("Address cannot be empty.");
 
-    let fd = new FormData();
+        // Prepare encrypted FormData
+        let fd = new FormData();
 
-    // REQUIRED BACKEND FIELDS (MATCH YOUR SCREENSHOT)
-    fd.append("cino", data.cino);
-    fd.append("cldt", data.cl_date);
-    fd.append("cltype", data.cl_type);
-    fd.append("courtno", data.court_no);
-    fd.append("itemno", data.item_no);
+        fd.append("cino", safeEncode(data.cino));
+        fd.append("cldt", safeEncode(data.cl_date));
+        fd.append("cltype", safeEncode(data.cl_type));
+        fd.append("courtno", safeEncode(data.court_no));
+        fd.append("itemno", safeEncode(data.item_no));
 
-    fd.append("partynm", name);     // Party Name
-    fd.append("partymob", mobile);  // Mobile
-    fd.append("paddress", address); // Address
-    fd.append("partyno", "0");      // Always 0 for PIP
-    fd.append("passfor", "P");      // Pass type: PIP
+        fd.append("partynm", safeEncode(name));
+        fd.append("partymob", safeEncode(mobile));
+        fd.append("paddress", safeEncode(address));
 
-    fetch("/HC-EPASS-MVC/public/index.php?r=pass/generateCourtPIP", {
-        method: "POST",
-        body: fd
-    })
-    .then(r => r.json())
-    .then(resp => {
-        alert("Party-in-Person Pass Generated! PASS NO: " + resp.pass_no);
-    });
-}
+        fd.append("partyno", safeEncode("0"));
+        fd.append("passfor", safeEncode("P")); // PIP type
 
+        showLoader();
 
+        fetch("/HC-EPASS-MVC/public/index.php?r=pass/generateCourtPIP", {
+                method: "POST",
+                body: fd
+            })
+            .then(r => r.json())
+            .then(resp => {
+
+                hideLoader();
+
+                if (resp.status === "ERROR") {
+                    return showError(resp.message);
+                }
+
+                showSuccess("PIP Pass Generated Successfully!<br>PASS NO: <b>" + resp.pass_no + "</b>");
+
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            })
+            .catch(() => {
+                hideLoader();
+                showError("Something went wrong! Please try again.");
+            });
+    }
 </script>
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    var noticeModal = new bootstrap.Modal(document.getElementById('noticeModal'));
-    noticeModal.show();
-});
+    document.addEventListener("DOMContentLoaded", function() {
+        var noticeModal = new bootstrap.Modal(document.getElementById('noticeModal'));
+        noticeModal.show();
+    });
 </script>
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

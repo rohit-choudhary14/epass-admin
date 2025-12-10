@@ -25,6 +25,13 @@
     </div>
   </div>
 </div>
+<div id="global-msg" 
+     style="display:none; position:fixed; top:20px; right:20px; 
+            padding:15px 20px; border-radius:8px; color:white; 
+            font-weight:600; z-index:99999;">
+</div>
+
+
 
 </body>
 <script>
@@ -80,6 +87,28 @@ $(document).ready(function(){
 
 });
 </script>
+<script>
+function showError(msg) {
+    let box = document.getElementById("global-msg");
+    box.style.background = "#dc2626"; // red
+    box.innerHTML = msg;
+    box.style.display = "block";
+    setTimeout(() => box.style.display = "none", 3000);
+}
+
+function showSuccess(msg) {
+    let box = document.getElementById("global-msg");
+    box.style.background = "#16a34a"; // green
+    box.innerHTML = msg;
+    box.style.display = "block";
+    setTimeout(() => box.style.display = "none", 3000);
+}
+
+function safeEncode(str) {
+    return btoa(unescape(encodeURIComponent(str))); 
+}
+</script>
+
 
 
 </html>

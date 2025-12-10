@@ -103,16 +103,16 @@
         background: #dcfce7;
         color: #166534;
     }
-    /* Match Select2 box with input-field styling */
-.select2-container--default .select2-selection--multiple {
-    min-height: 48px !important;
-    border-radius: 10px !important;
-    border: 1px solid #d1d5db !important;
-    background: #f9fafb !important;
-    padding: 6px 8px !important;
-    font-size: 15px;
-}
 
+    /* Match Select2 box with input-field styling */
+    .select2-container--default .select2-selection--multiple {
+        min-height: 48px !important;
+        border-radius: 10px !important;
+        border: 1px solid #d1d5db !important;
+        background: #f9fafb !important;
+        padding: 6px 8px !important;
+        font-size: 15px;
+    }
 </style>
 
 <div class="form-wrapper">
@@ -151,7 +151,7 @@
 
                 <div>
                     <label style="font-weight:700;font-size:16px;">Select Sections</label>
-                   <select id="sections" name="sections[]" class="input-field" multiple style="width:100%;">
+                    <select id="sections" name="sections[]" class="input-field" multiple style="width:100%;">
 
                         <?php foreach ($purposeList as $p): ?>
                             <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['purpose']) ?></option>
@@ -209,65 +209,90 @@
             let visit = $("input[name='visit_date']").val().trim();
             let sections = $("#sections").val();
 
-            // REQUIRED VALIDATION
+            // VALIDATION
             if (name === "" || mobile === "" || address === "" || visit === "") {
-                $("#form-message").html(`<div class="msg-error">Please fill all required fields.</div>`);
+                showError("Please fill all required fields.");
                 return;
             }
 
-            // ✅ OLD MOBILE VALIDATION (RESTORED)
             if (!/^[0-9]{10}$/.test(mobile)) {
-                $("#form-message").html(`<div class="msg-error">Invalid mobile number.</div>`);
+                showError("Invalid mobile number.");
                 return;
             }
             if (!/^[6-9]/.test(mobile)) {
-                $("#form-message").html(`<div class="msg-error">Mobile must start with 6–9.</div>`);
+                showError("Mobile must start with 6–9.");
                 return;
             }
             if (/^(\d)\1+$/.test(mobile)) {
-                $("#form-message").html(`<div class="msg-error">Invalid mobile number pattern.</div>`);
+                showError("Invalid mobile number pattern.");
                 return;
             }
 
-            // SECTION VALIDATION (UNCHANGED — AS BEFORE)
             if (!sections || sections.length === 0) {
-                $("#form-message").html(`<div class='msg-error'>Please select at least one section.</div>`);
+                showError("Please select at least one section.");
                 return;
             }
 
+            // CHECK purpose remarks
+            let purposeObj = {};
             for (let id of sections) {
                 let purpose = $(`input[name='purpose[${id}]']`).val()?.trim();
                 if (!purpose || purpose === "") {
-                    $("#form-message").html(`<div class='msg-error'>Purpose missing for selected section.</div>`);
+                    showError("Purpose missing for selected section.");
                     return;
                 }
+                purposeObj[id] = purpose;
             }
 
-            let formData = $("#sectionPassForm").serialize();
+            //------------------------------
+            // 🔐 ENCRYPTED FormData
+            //------------------------------
+            let fd = new FormData();
+
+            fd.append("pip_name", safeEncode(name));
+            fd.append("pip_mobile", safeEncode(mobile));
+            fd.append("pip_address", safeEncode(address));
+            fd.append("visit_date", safeEncode(visit));
+
+            // Encrypt sections array
+            fd.append("sections", safeEncode(JSON.stringify(sections)));
+
+            // Encrypt purpose remarks object
+            fd.append("purpose", safeEncode(JSON.stringify(purposeObj)));
+
             showLoader();
 
             $.ajax({
                 url: "/HC-EPASS-MVC/public/index.php?r=pass/savePartyInPsersonSection",
                 type: "POST",
-                data: formData,
+                data: fd,
+                processData: false, // IMPORTANT for FormData
+                contentType: false, // IMPORTANT for FormData
                 dataType: "json",
+
                 success: function(res) {
                     hideLoader();
 
                     if (res.status === "ERROR") {
-                        $("#form-message").html(`<div class='msg-error'>${res.message}</div>`);
+                        showError(res.message);
                         return;
                     }
 
-                    $("#form-message").html(`<div class='msg-success'>Pass Generated Successfully! Redirecting...</div>`);
+                    showSuccess("Pass Generated Successfully! Redirecting...");
 
                     setTimeout(() => {
                         window.location.href = res.redirect;
-                    }, 1200);
+                    }, 1500);
+                },
+
+                error: function(xhr) {
+                    hideLoader();
+                    showError("Server Error: " + (xhr.responseText || "Unable to connect."));
                 }
             });
-
         });
+
+
 
 
     });

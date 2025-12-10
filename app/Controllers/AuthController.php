@@ -77,7 +77,7 @@ class AuthController extends BaseController
         $token = $_GET['token'] ?? '';
 
         // your secure token (store in config or database)
-        $validToken = "HCADMIN-REGISTER-2025";
+        $validToken = "c472dd7564a5fb4056683aeb67a7f323a194c7cfff6a2bc4223b031e4048e524";
 
         // token check
         if ($token !== $validToken) {
@@ -147,6 +147,13 @@ class AuthController extends BaseController
         $email    = trim($_POST['email']);
         $contact  = trim($_POST['contact']);
         $password = trim($_POST['password']);
+        $est = $_POST['establishment'] ?? '';
+
+        if (!in_array($est, ['P', 'B'])) {
+            $error = "Invalid establishment selected.";
+            // reload form
+        }
+
 
         if ($this->userModel->findByUsername($username)) {
             $this->render("auth/registerOfficerForm", [
@@ -154,7 +161,6 @@ class AuthController extends BaseController
             ]);
             return;
         }
-
         $ok = $this->userModel->createOfficer(
             $username,
             $name,
@@ -162,9 +168,9 @@ class AuthController extends BaseController
             $email,
             $contact,
             $password,
-            10
+            10,
+            $est
         );
-
         if ($ok) {
             $this->render("auth/registerOfficerForm", [
                 "success" => "Officer created successfully!"

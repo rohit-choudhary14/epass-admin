@@ -225,52 +225,52 @@
     });
 
     /* ---------------------- SHOW CASE FOR LITIGANT ---------------------- */
-function showLitigantCase(data) {
+    function showLitigantCase(data) {
 
-    let box = document.getElementById("case-result");
+        let box = document.getElementById("case-result");
 
-    if (data.status !== "OK") {
-        box.style.display = "block";
-        box.innerHTML = `<p style="color:red;font-weight:bold">${data.message}</p>`;
-        return;
-    }
+        if (data.status !== "OK") {
+            box.style.display = "block";
+            box.innerHTML = `<p style="color:red;font-weight:bold">${data.message}</p>`;
+            return;
+        }
 
-    // Build advocate dropdown
-    let advOptions = data.advocates.map(a => `
+        // Build advocate dropdown
+        let advOptions = data.advocates.map(a => `
         <option value="${a.name}||${a.adv_code}||${a.side}">
             ${a.name} (${a.side_label})
         </option>
     `).join("");
 
-    // Determine litigant side automatically
-    let sides = [...new Set(data.advocates.map(a => a.side))];
-    let partySelectHTML = "";
+        // Determine litigant side automatically
+        let sides = [...new Set(data.advocates.map(a => a.side))];
+        let partySelectHTML = "";
 
-    if (sides.length === 1) {
-        // Auto side
-        let side = sides[0];
-        let label = (side == 1 ? "Petitioner" : "Respondent");
+        if (sides.length === 1) {
+            // Auto side
+            let side = sides[0];
+            let label = (side == 1 ? "Petitioner" : "Respondent");
 
-        partySelectHTML = `
+            partySelectHTML = `
             <div class="form-group">
                 <label><b>Litigant Side</b></label>
                 <input type="text" id="party_side_label" value="${label}" disabled>
                 <input type="hidden" id="party_side" value="${side}">
             </div>
         `;
-    } else {
-        // If both side advocates exist
-        partySelectHTML = `
+        } else {
+            // If both side advocates exist
+            partySelectHTML = `
             <label>Select Party (Litigant)</label>
             <select id="party_side">
                 <option value="1">Petitioner</option>
                 <option value="2">Respondent</option>
             </select>
         `;
-    }
+        }
 
-    box.style.display = "block";
-    box.innerHTML = `
+        box.style.display = "block";
+        box.innerHTML = `
         <div class="result-title">Case Found</div>
 
         <p><b>Court Room:</b> ${data.court_no}</p>
@@ -288,34 +288,34 @@ function showLitigantCase(data) {
             Continue
         </button>
     `;
-}
+    }
 
 
 
 
     /* ---------------------- SHOW LITIGANT FINAL FORM ---------------------- */
-  function openLitigantForm(encoded) {
+    function openLitigantForm(encoded) {
 
-    let data = JSON.parse(decodeURIComponent(encoded));
+        let data = JSON.parse(decodeURIComponent(encoded));
 
-    // Determine litigant side
-    let side;
-    if (document.getElementById("party_side")) {
-        side = document.getElementById("party_side").value;
-    } else {
-        // read from advocate
+        // Determine litigant side
+        let side;
+        if (document.getElementById("party_side")) {
+            side = document.getElementById("party_side").value;
+        } else {
+            // read from advocate
+            let recommended = document.getElementById("recommended_adv").value.split("||");
+            side = recommended[2];
+        }
+
+        let sideLabel = (side == 1 ? "Petitioner" : "Respondent");
+
+        // Advocate info
         let recommended = document.getElementById("recommended_adv").value.split("||");
-        side = recommended[2];  
-    }
+        let recommendedName = recommended[0];
+        let recommendedCode = recommended[1];
 
-    let sideLabel = (side == 1 ? "Petitioner" : "Respondent");
-
-    // Advocate info
-    let recommended = document.getElementById("recommended_adv").value.split("||");
-    let recommendedName = recommended[0];
-    let recommendedCode = recommended[1];
-
-    document.getElementById("case-result").innerHTML = `
+        document.getElementById("case-result").innerHTML = `
         <div class="new-pass-box">
             <h3 class="pass-title">Generate Litigant Pass</h3>
 
@@ -357,7 +357,7 @@ function showLitigantCase(data) {
             </button>
         </div>
     `;
-}
+    }
 
 
     function isValidMobile(mob) {
@@ -385,44 +385,66 @@ function showLitigantCase(data) {
 
         // VALIDATIONS
         if (name === "") {
-            alert("Litigant name cannot be empty.");
+            showError("Litigant name cannot be empty.");
             return;
         }
 
         if (!isValidMobile(mobile)) {
-            alert("Enter a valid 10-digit mobile number (should start from 6-9 and cannot be all zeros).");
+            showError("Enter a valid 10-digit mobile number starting with 6–9.");
             return;
         }
 
         if (address === "") {
-            alert("Litigant address cannot be empty.");
+            showError("Litigant address cannot be empty.");
             return;
         }
 
         let fd = new FormData();
-        fd.append("cino", data.cino);
-        fd.append("lit_name", name);
-        fd.append("lit_mobile", mobile);
-        fd.append("lit_address", address);
-        fd.append("passfor", 'L');
-        // Recommended advocate
-        fd.append("recommended_by", recAdvName);
-        fd.append("recommended_code", recAdvCode);
-        fd.append("adv_type", party_side);
-        fd.append("courtno", data.court_no);
-        fd.append("itemno", data.item_no);
-        fd.append("cldt", data.cl_date);
-        fd.append("cltype", data.cl_type);
 
-        // showLoader();
+        // 🔐 ENCRYPT ALL FIELDS BEFORE SENDING
+        fd.append("cino", safeEncode(data.cino));
+        fd.append("lit_name", safeEncode(name));
+        fd.append("lit_mobile", safeEncode(mobile));
+        fd.append("lit_address", safeEncode(address));
+        fd.append("passfor", safeEncode('L'));
+
+        fd.append("recommended_by", safeEncode(recAdvName));
+        fd.append("recommended_code", safeEncode(recAdvCode));
+
+        fd.append("adv_type", safeEncode(party_side));
+
+        // Case info
+        fd.append("courtno", safeEncode(data.court_no));
+        fd.append("itemno", safeEncode(data.item_no));
+        fd.append("cldt", safeEncode(data.cl_date));
+        fd.append("cltype", safeEncode(data.cl_type));
+
+        showLoader();
+
         fetch("/HC-EPASS-MVC/public/index.php?r=pass/generateCourtLitigant", {
                 method: "POST",
                 body: fd
             })
             .then(r => r.json())
             .then(resp => {
+
                 hideLoader();
-                alert("Litigant Pass Generated! PASS NO: " + resp.pass_no);
+
+                if (resp.status === "ERROR") {
+                    showError(resp.message || "Unable to generate litigant pass.");
+                    return;
+                }
+
+                showSuccess("Litigant Pass Generated! <br> PASS NO: <b>" + resp.pass_no + "</b>");
+
+                setTimeout(() => {
+                    window.location.href = "/HC-EPASS-MVC/public/index.php?r=pass/myPasses";
+                }, 1500);
+            })
+            .catch(err => {
+                hideLoader();
+                console.error("Fetch Error:", err);
+                showError("Server error! Please try again later.");
             });
     }
 </script>

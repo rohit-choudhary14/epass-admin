@@ -38,4 +38,11 @@ class BaseController
 
         include $viewFile;
     }
+     function decodeField($value)
+    {
+        return urldecode(base64_decode($value));
+    }
+    function decodeFieldJson($v) {
+    return json_decode(base64_decode($v), true) ?: base64_decode($v);
+}
 }
