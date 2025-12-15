@@ -22,22 +22,27 @@ class Pass extends BaseModel
     }
     public function list($from = null, $to = null, $limit = null)
     {
-        $sql = "SELECT id, pass_no, passfor, passtype,
-                   to_char(entry_dt,'DD/MM/YYYY') AS entry_dt
-            FROM gatepass_details
-            WHERE 1=1";
+        $sql = "
+    SELECT 
+        gd.*,
+        to_char(gd.entry_dt,'DD/MM/YYYY') AS entry_dt_str
+    FROM gatepass_details gd
+    WHERE 1=1
+";
+
         $params = [];
 
         if ($from) {
-            $sql .= " AND entry_dt::date >= :from";
+            $sql .= " AND gd.entry_dt::date >= :from";
             $params[':from'] = $from;
         }
+
         if ($to) {
-            $sql .= " AND entry_dt::date <= :to";
+            $sql .= " AND gd.entry_dt::date <= :to";
             $params[':to'] = $to;
         }
 
-        $sql .= " ORDER BY entry_dt DESC";
+        $sql .= " ORDER BY gd.entry_dt DESC";
 
         if ($limit !== null) {
             $sql .= " LIMIT :lim";
@@ -47,7 +52,7 @@ class Pass extends BaseModel
             $stmt = $this->pdo->prepare($sql);
 
             if ($limit !== null) {
-                $stmt->bindValue(':lim', (int)$limit, PDO::PARAM_INT);
+                $stmt->bindValue(':lim', (int) $limit, PDO::PARAM_INT);
             }
 
             foreach ($params as $k => $v) {
@@ -139,13 +144,21 @@ class Pass extends BaseModel
     {
         try {
             $stmt = $this->pdo->prepare(
-                "SELECT *, to_char(entry_dt,'DD/MM/YYYY HH24:MI') AS entry_dt_str
-                 FROM gatepass_details WHERE id = :id LIMIT 1"
+                "SELECT 
+                g.*,
+                u.name AS adv_name,
+                to_char(g.entry_dt,'DD/MM/YYYY HH24:MI') AS entry_dt_str
+             FROM gatepass_details g
+             LEFT JOIN gatepass_users u 
+                ON u.enroll_num = g.adv_enroll
+             WHERE g.id = :id
+             LIMIT 1"
             );
+
             $stmt->execute([':id' => $id]);
-            return $stmt->fetch();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            error_log("Pass::find " . $e->getMessage());
+            error_log('Pass::find ' . $e->getMessage());
             return null;
         }
     }
@@ -479,11 +492,37 @@ class Pass extends BaseModel
     }
     public function getSectionPassById($id)
     {
-        $sql = "SELECT * FROM gatepass_details_section WHERE id = :id LIMIT 1";
+        $sql = "
+        SELECT 
+            s.*,
+            u.name        AS adv_name,
+            u.contact_num AS adv_mobile
+        FROM gatepass_details_section s
+        LEFT JOIN gatepass_users u 
+            ON u.adv_code = s.adv_cd
+        WHERE s.id = :id
+        LIMIT 1
+    ";
+
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([":id" => $id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt->execute([':id' => $id]);
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // 🔐 DECRYPT MOBILE NUMBER
+        if (!empty($row['adv_mobile'])) {
+            $row['adv_mobile'] = $this->decryptData($row['adv_mobile']);
+        }
+        if (!empty($row['litigantmobile'])) {
+            $row['litigantmobile'] = $this->decryptData($row['litigantmobile']);
+        }
+
+
+
+        return $row;
     }
+
+
 
 
 
@@ -674,11 +713,11 @@ class Pass extends BaseModel
     }
     public function checkPIPSectionDuplicate($partyMobile, $pass_dt)
     {
-       
+
         $sql = "SELECT litigantmobile
             FROM gatepass_details_section
             WHERE pass_dt = :pass_dt
-            AND passfor = 'PS'"; 
+            AND passfor = 'PS'";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([

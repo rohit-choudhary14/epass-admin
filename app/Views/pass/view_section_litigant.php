@@ -85,8 +85,7 @@
         text-decoration: none;
         font-weight: 600;
     }
-
-    .text-highlight {
+      .text-highlight {
         position: relative;
         font-weight: 700;
         z-index: 1;
@@ -98,14 +97,13 @@
         left: -4px;
         right: -4px;
         bottom: 2px;
-        height: 1rem;
+        height: 1em;
         background: #fff59d;
         /* highlighter yellow */
         z-index: -1;
         transform: rotate(-1deg);
         border-radius: 2px;
     }
-
 
     /* PRINT */
     @media print {
@@ -122,11 +120,6 @@
             border: none;
             padding: 0;
         }
-        @media print {
-    .text-highlight::before {
-        background: #e5e7eb; /* light grey on print */
-    }
-}
     }
 </style>
 
@@ -138,82 +131,80 @@
 
     <?php else: ?>
 
-        <!-- HEADER -->
-        <div class="pass-header">
-            <h2>Advocate Section Pass</h2>
-            <div class="sub">Rajasthan High Court · Official Entry Pass</div>
+      <!-- HEADER -->
+<div class="pass-header">
+    <h2>Litigant Section Pass</h2>
+    <div class="sub">Rajasthan High Court · Official Entry Pass</div>
+</div>
+
+<!-- DETAILS -->
+<div class="details">
+
+    <div class="detail-row">
+        <div class="detail-label">Pass No</div>
+        <div class="detail-value"><?= htmlspecialchars($pass['pass_no']) ?></div>
+    </div>
+
+    <div class="detail-row">
+        <div class="detail-label">Pass Date</div>
+        <div class="detail-value"><?= date("d-m-Y", strtotime($pass['pass_dt'])) ?></div>
+    </div>
+
+    <div class="detail-row">
+        <div class="detail-label">Litigant Name</div>
+        <div class="detail-value">
+             <span class="text-highlight">
+            <?= htmlspecialchars($pass['litigantname'] ?? '—') ?>
+            </span>
         </div>
+    </div>
 
-        <!-- DETAILS -->
-        <div class="details">
+    <div class="detail-row">
+        <div class="detail-label">Mobile</div>
+        <div class="detail-value">
+            <span class="text-highlight">
 
-            <div class="detail-row">
-                <div class="detail-label">Pass No</div>
-                <div class="detail-value"><?= htmlspecialchars($pass['pass_no']) ?></div>
+            <?= htmlspecialchars($pass['litigantmobile'] ?? '—') ?>
+
+    </span>
+        </div>
+    </div>
+
+  <div class="detail-row">
+                <div class="detail-label">R/O</div>
+                <div class="detail-value"><?= htmlspecialchars($pass['litigant_address']) ?></div>
             </div>
 
-            <div class="detail-row">
-                <div class="detail-label">Pass Date</div>
-                <div class="detail-value"><?= date("d-m-Y", strtotime($pass['pass_dt'])) ?></div>
-            </div>
+    <?php if (!empty($pass['adv_name'])): ?>
+    <div class="detail-row">
+        <div class="detail-label">Recommended By</div>
+        <div class="detail-value"><?= htmlspecialchars($pass['adv_name']) ?></div>
+    </div>
+    <?php endif; ?>
 
-            <div class="detail-row">
-                <div class="detail-label">Advocate Name</div>
-                <div class="detail-value">
-                    <span class="text-highlight">
-                        <?= htmlspecialchars($pass['adv_name']) ?>
-                    </span>
-                </div>
-            </div>
+    <div class="detail-row">
+        <div class="detail-label">Entry Time</div>
+        <div class="detail-value"><?= date("d-m-Y H:i:s", strtotime($pass['entry_dt'])) ?></div>
+    </div>
 
-
-            <div class="detail-row">
-                <div class="detail-label">Enrollment No</div>
-                <div class="detail-value">
-                    <span class="text-highlight">
-                         <?= htmlspecialchars($pass['enroll_no']) ?>
-                    </span>
-                   
-                </div>
-            </div>
-
-            <div class="detail-row">
-                <div class="detail-label">Mobile</div>
-                <div class="detail-value"><?= htmlspecialchars($pass['adv_mobile']) ?></div>
-            </div>
-
-            <div class="detail-row">
-                <div class="detail-label">Entry Time</div>
-                <div class="detail-value"><?= date("d-m-Y H:i:s", strtotime($pass['entry_dt'])) ?></div>
-            </div>
-
-
-
-            <?php if (!empty($pass['purpose_items'])): ?>
-                <div class="detail-row full">
-                    <div class="detail-label">Purpose & Remarks</div>
-                    <div class="detail-value">
-
-                        <?php foreach ($pass['purpose_items'] as $item): ?>
-                            <div style="margin-bottom:6px;">
-                                <strong>
-                                    <?= htmlspecialchars($item['section_name']) ?>:
-                                </strong>
-                                <span>
-                                    <?= !empty($item['remark'])
-                                        ? htmlspecialchars($item['remark'])
-                                        : '—'; ?>
-                                </span>
-                            </div>
-                        <?php endforeach; ?>
-
+    <?php if (!empty($pass['purpose_items'])): ?>
+        <div class="detail-row full">
+            <div class="detail-label">Purpose & Remarks</div>
+            <div class="detail-value">
+                <?php foreach ($pass['purpose_items'] as $item): ?>
+                    <div style="margin-bottom:6px;">
+                        <strong><?= htmlspecialchars($item['section_name']) ?>:</strong>
+                        <?= !empty($item['remark'])
+                            ? htmlspecialchars($item['remark'])
+                            : '—'; ?>
                     </div>
-                </div>
-            <?php endif; ?>
-
-
-
+                <?php endforeach; ?>
+            </div>
         </div>
+    <?php endif; ?>
+
+</div>
+
 
     <?php endif; ?>
 

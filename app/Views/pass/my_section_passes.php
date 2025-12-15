@@ -175,12 +175,30 @@
                             <td data-label="Pass for"><?= htmlspecialchars($passForLabel) ?></td>
 
                             <!-- VIEW button in its own column -->
+                            <?php
+                            $viewRoute = '#';
+
+                            switch (trim($p['passfor'])) {
+                                case 'S':
+                                    $viewRoute = 'pass/viewSectionAdvocate';
+                                    break;
+
+                                case 'LS':
+                                    $viewRoute = 'pass/viewSectionLitigant';
+                                    break;
+
+                                case 'PS':
+                                    $viewRoute = 'pass/viewSectionParty';
+                                    break;
+                            }
+                            ?>
                             <td data-label="View">
                                 <a class="btn-view"
-                                    href="/HC-EPASS-MVC/public/index.php?r=pass/viewSection&id=<?= $p['id'] ?>">
+                                    href="/HC-EPASS-MVC/public/index.php?r=<?= $viewRoute ?>&id=<?= $p['id'] ?>">
                                     View
                                 </a>
                             </td>
+
 
                             <!-- PDF button in its own column -->
                             <td data-label="PDF">

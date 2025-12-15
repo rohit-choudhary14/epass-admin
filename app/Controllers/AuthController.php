@@ -12,8 +12,30 @@ class AuthController extends BaseController
 
     public function loginForm()
     {
+        if (
+            isset($_SESSION['admin_user']) &&
+            !empty($_SESSION['admin_user']['id'])
+        ) {
+
+            $roleId = (int) ($_SESSION['admin_user']['role_id'] ?? 0);
+            if ($roleId === 20) {
+                // Admin
+                header("Location: /HC-EPASS-MVC/public/index.php?r=dashboard/index");
+                exit;
+            }
+
+            if ($roleId === 10) {
+                // Officer
+                header("Location: /HC-EPASS-MVC/public/index.php?r=officer/dashboard");
+                exit;
+            }
+            session_destroy();
+            header("Location: /HC-EPASS-MVC/public/index.php?r=auth/loginForm");
+            exit;
+        }
         include __DIR__ . '/../Views/auth/login.php';
     }
+
 
     public function loginPost()
     {
@@ -42,7 +64,7 @@ class AuthController extends BaseController
                 'name' => $user['name'],
                 'username' => $user['username'],
                 'role_id' => (int)$user['role_id'],
-                'establishment' => $user['estt']
+                // 'establishment' => $user['estt']
             ];
 
             if ($user['role_id'] == 20) {  // Admin

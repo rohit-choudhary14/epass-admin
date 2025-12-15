@@ -31,7 +31,7 @@ class PassController extends BaseController
     public function view()
     {
         $this->requireAuth();
-        $this->requireRole([20]);
+        // $this->requireRole([20]);
 
         if (!isset($_GET['id'])) {
             echo "Missing ID";
@@ -45,8 +45,26 @@ class PassController extends BaseController
             echo "Pass not found";
             exit;
         }
+      
 
-        view('pass/view', ['p' => $p]);
+        switch (trim($p['passfor'])) {
+
+            case 'C':   // Advocate
+                view('pass/view', ['p' => $p]);
+                break;
+
+            case 'L':   // Litigant
+                view('pass/viewLitigant', ['p' => $p]);
+                break;
+
+            case 'P':   // Party in Person
+                view('pass/viewParty', ['p' => $p]);
+                break;
+
+            default:
+                echo "Invalid pass type";
+                exit;
+        }
     }
     public function ajaxList()
     {
@@ -1210,7 +1228,7 @@ class PassController extends BaseController
         $pass_dt = $this->decodeField($_POST['visit_date']) ?? date("Y-m-d");
         $litigantname = $this->decodeField($_POST['pip_name']) ?? '';
         $litigantmobile = $this->decodeField($_POST['pip_mobile']) ?? '';
-        $litigant_address =$this->decodeField( $_POST['pip_address']) ?? '';
+        $litigant_address = $this->decodeField($_POST['pip_address']) ?? '';
         $litigantmobile = $this->getEncryptValue($litigantmobile);
         if (empty($sections)) {
             echo json_encode([
@@ -1303,8 +1321,44 @@ class PassController extends BaseController
         $pass = $model->getSectionPassById($id);
 
         if (!$pass) die("Pass not found");
+        $pass = $this->passModel->getSectionPassById($id);
 
-        $this->render("pass/view_section", ["pass" => $pass]);
+        if ($pass && !empty($pass['purposermks'])) {
+
+            $decoded = json_decode($pass['purposermks'], true);
+            $pass['purpose_items'] = [];
+
+            if (is_array($decoded)) {
+                foreach ($decoded as $r) {
+                    $sectionId = $r['purpose'] ?? null;
+
+                    $pass['purpose_items'][] = [
+                        'section_id'   => $sectionId,
+                        'section_name' => $sectionId ? $this->getSectionNameById($sectionId) : '',
+                        'remark'       => $r['remark'] ?? ''
+                    ];
+                }
+            }
+        }
+
+        /* render based on pass type */
+        switch (trim($pass['passfor'])) {
+            case 'S':
+                $this->render("pass/view_section", ["pass" => $pass]);
+                break;
+
+            case 'LS':
+                $this->render('pass/view_section_litigant', ['pass' => $pass]);
+                break;
+
+            case 'PS':
+                $this->render('pass/view_section_party', ['pass' => $pass]);
+                break;
+
+            default:
+                die('Invalid section pass type');
+        }
+        //
     }
     private function getSectionNameById($id)
     {

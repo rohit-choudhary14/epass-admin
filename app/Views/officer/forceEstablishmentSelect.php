@@ -1,4 +1,7 @@
-<div class="modal show" style="display:block; background:rgba(0,0,0,0.6);">
+
+<?php include __DIR__ . '/../layouts/header.php'; ?>
+
+<div class="modal fade" id="estModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content" style="border-radius:12px;">
 
@@ -25,6 +28,29 @@
     </div>
   </div>
 </div>
+<script>
+$(document).ready(function () {
+
+    <?php if (
+        isset($_SESSION['admin_user']) &&
+        $_SESSION['admin_user']['role_id'] == 10 && 
+        empty($_SESSION['admin_user']['establishment'])
+    ): ?>
+        var estModal = new bootstrap.Modal(
+            document.getElementById('estModal'),
+            {
+                backdrop: 'static',   
+                keyboard: false      
+            }
+        );
+        estModal.show();
+        console.log(typeof bootstrap);
+    <?php endif; ?>
+
+});
+</script>
+
+
 
 <script>
 $("#saveEstBtn").click(function() {
@@ -40,7 +66,7 @@ $("#saveEstBtn").click(function() {
         { establishment: est },
         function(res){
             if(res.status === "OK"){
-                location.reload(); // dashboard will open normally now
+                location.reload(); 
             } else {
                 alert("Error: " + res.message);
             }

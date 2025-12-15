@@ -5,6 +5,8 @@ class OfficerController extends BaseController
 {
     public function dashboard()
     {
+    
+
         $this->requireAuth();
         $this->requireRole([10]);
         if (empty($_SESSION['admin_user']['establishment'])) {

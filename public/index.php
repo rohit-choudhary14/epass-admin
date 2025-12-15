@@ -81,7 +81,9 @@ switch ($controller) {
         elseif ($action === 'saveAdvocateSection') $c->actionSaveAdvocateSection();
         elseif ($action === 'saveLitigantSection') $c->actionSaveLitigantSection();
         elseif ($action === 'savePartyInPsersonSection') $c->actionSavePIPSection();
-        elseif ($action === 'viewSection') $c->viewSection();
+        elseif ($action === 'viewSectionAdvocate') $c->viewSection();
+        elseif ($action === 'viewSectionLitigant') $c->viewSection();
+        elseif ($action === 'viewSectionParty') $c->viewSection();
 
 
 

@@ -98,7 +98,7 @@
         left: -4px;
         right: -4px;
         bottom: 2px;
-        height: 1rem;
+        height: 1em;
         background: #fff59d;
         /* highlighter yellow */
         z-index: -1;
@@ -122,11 +122,6 @@
             border: none;
             padding: 0;
         }
-        @media print {
-    .text-highlight::before {
-        background: #e5e7eb; /* light grey on print */
-    }
-}
     }
 </style>
 
@@ -140,7 +135,7 @@
 
         <!-- HEADER -->
         <div class="pass-header">
-            <h2>Advocate Section Pass</h2>
+            <h2>PIP Section Pass</h2>
             <div class="sub">Rajasthan High Court · Official Entry Pass</div>
         </div>
 
@@ -158,30 +153,28 @@
             </div>
 
             <div class="detail-row">
-                <div class="detail-label">Advocate Name</div>
+                <div class="detail-label">Party Person Name</div>
                 <div class="detail-value">
-                    <span class="text-highlight">
-                        <?= htmlspecialchars($pass['adv_name']) ?>
+                    <span class="text-highlight"><?= htmlspecialchars($pass['litigantname']) ?>
                     </span>
                 </div>
             </div>
 
 
-            <div class="detail-row">
-                <div class="detail-label">Enrollment No</div>
-                <div class="detail-value">
-                    <span class="text-highlight">
-                         <?= htmlspecialchars($pass['enroll_no']) ?>
-                    </span>
-                   
-                </div>
-            </div>
 
             <div class="detail-row">
                 <div class="detail-label">Mobile</div>
-                <div class="detail-value"><?= htmlspecialchars($pass['adv_mobile']) ?></div>
-            </div>
+                <div class="detail-value">
+                    <span class="text-highlight">
+                        <?= htmlspecialchars($pass['litigantmobile']) ?>
+                    </span>
 
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">R/O</div>
+                <div class="detail-value"><?= htmlspecialchars($pass['litigant_address']) ?></div>
+            </div>
             <div class="detail-row">
                 <div class="detail-label">Entry Time</div>
                 <div class="detail-value"><?= date("d-m-Y H:i:s", strtotime($pass['entry_dt'])) ?></div>

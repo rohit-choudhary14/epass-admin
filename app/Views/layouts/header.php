@@ -34,12 +34,39 @@
 
 <body>
     <style>
+        /* FIXED TRI-COLOR HEADER */
+        .fixed-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 90px;
+            /* adjust if needed */
+            z-index: 10000;
+
+        }
+
         .nav-black {
+            position: fixed;
+            top: 90px;
+            /* SAME as header height */
+            left: 0;
+            width: 100%;
             background: #000;
-            padding: 12px;
+            padding: 12px 20px;
             display: flex;
             gap: 18px;
             align-items: center;
+            z-index: 9999;
+        }
+
+        .page-content {
+            padding-top: 150px;
+            /* header (90) + nav (~60) */
+        }
+
+        .dropdown-content {
+            z-index: 10001;
         }
 
         .nav-black a {
@@ -120,7 +147,7 @@
         }
     </style>
     <!-- TRI-COLOR HEADER -->
-    <header class="tri-header">
+    <header class="tri-header fixed-header">
 
         <img src="/HC-EPASS-MVC/public/assets/images/Emblem_of_India.svg" class="ashoka left">
 
