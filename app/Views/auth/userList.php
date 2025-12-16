@@ -76,7 +76,7 @@
     <table id="userTable" class="display nowrap">
         <thead>
             <tr>
-                <th>ID</th>
+                <!-- <th>ID</th> -->
                 <th>Username</th>
                 <th>Full Name</th>
                 <th>Type</th>
@@ -91,7 +91,7 @@
         <tbody>
             <?php foreach ($users as $u): ?>
                 <tr>
-                    <td><?= $u['id'] ?></td>
+                    <!-- <td><?= $u['id'] ?></td> -->
                     <td><?= htmlspecialchars($u['username']) ?></td>
                     <td><?= htmlspecialchars($u['name']) ?></td>
 
@@ -107,8 +107,24 @@
                         }
                         ?>
                     </td>
+                    <?php
+                    if (!function_exists('safeEmail')) {
+                        function safeEmail($email)
+                        {
+                            if (!$email) return '—';
 
-                    <td><?= htmlspecialchars($u['email'] ?? '—') ?></td>
+                            $email = htmlspecialchars($email, ENT_QUOTES, 'UTF-8');
+                            $email = str_replace('@', ' [at] ', $email);
+                            $email = str_replace('.', ' [dot] ', $email);
+
+                            return $email;
+                        }
+                    }
+                    ?>
+
+
+                    <td><?= safeEmail($u['email'] ?? null) ?></td>
+
                     <td><?= htmlspecialchars($u['contact'] ?? '—') ?></td>
 
                     <td><?= ($u['status'] ?? 0) ? 'Active' : 'Inactive' ?></td>

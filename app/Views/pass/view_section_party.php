@@ -106,6 +106,28 @@
         border-radius: 2px;
     }
 
+    /* STATUS BADGE */
+    .status-badge {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+    }
+
+    .status-valid {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #86efac;
+    }
+
+    .status-expired {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+    }
+
 
     /* PRINT */
     @media print {
@@ -124,7 +146,18 @@
         }
     }
 </style>
+<?php
+$today = date('Y-m-d');
 
+$passDate = !empty($pass['pass_dt'])
+    ? date('Y-m-d', strtotime($pass['pass_dt']))
+    : null;
+
+$isExpired = false;
+if ($passDate && $passDate < $today) {
+    $isExpired = true;
+}
+?>
 <div class="pass-card">
 
     <?php if (!$pass): ?>
@@ -136,6 +169,14 @@
         <!-- HEADER -->
         <div class="pass-header">
             <h2>PIP Section Pass</h2>
+            <div style="margin-top:10px;">
+                <?php if ($isExpired): ?>
+                    <span class="status-badge status-expired">EXPIRED</span>
+                <?php else: ?>
+                    <span class="status-badge status-valid">VALID</span>
+                <?php endif; ?>
+            </div>
+
             <div class="sub">Rajasthan High Court · Official Entry Pass</div>
         </div>
 

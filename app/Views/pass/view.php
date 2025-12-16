@@ -64,12 +64,52 @@
         text-align: center;
         margin-top: 24px;
     }
-</style>
 
+    /* STATUS BADGE */
+    .status-badge {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+    }
+
+    .status-valid {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #86efac;
+    }
+
+    .status-expired {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+    }
+</style>
+<?php
+$today = date('Y-m-d');
+
+$passDate = !empty($p['causelist_dt'])
+    ? date('Y-m-d', strtotime($p['causelist_dt']))
+    : null;
+
+$isExpired = false;
+if ($passDate && $passDate < $today) {
+    $isExpired = true;
+}
+?>
 <div class="pass-box">
 
     <div class="pass-title">Advocate Court Pass</div>
-    <div class="pass-sub">Rajasthan High Court · Official Entry Pass</div>
+    <div style="margin-top:10px; display:flex; justify-content:center">
+        <?php if ($isExpired): ?>
+            <span class="status-badge status-expired">EXPIRED</span>
+        <?php else: ?>
+            <span class="status-badge status-valid">VALID</span>
+        <?php endif; ?>
+    </div>
+    <div class="pass-sub" style="margin-top:10px">Rajasthan High Court · Official Entry Pass</div>
 
     <div class="detail-row">
         <div class="detail-label">Pass No</div>
@@ -105,8 +145,19 @@
 
     <div class="detail-row">
         <div class="detail-label">Hearing Date</div>
-        <div class="detail-value"><?= htmlspecialchars($p['entry_dt_str'] ?? '—') ?></div>
+        <div class="detail-value">
+            <?php
+            if (!empty($p['causelist_dt'])) {
+                $dt = DateTime::createFromFormat('Y-m-d', $p['causelist_dt']);
+                echo $dt ? $dt->format('d-m-Y') : '—';
+            } else {
+                echo '—';
+            }
+            ?>
+        </div>
     </div>
+
+
 
     <div class="back-btn">
         <a href="/HC-EPASS-MVC/public/index.php?r=pass/myPasses"
