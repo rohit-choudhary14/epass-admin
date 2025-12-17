@@ -45,7 +45,7 @@ class PassController extends BaseController
             echo "Pass not found";
             exit;
         }
-      
+
 
         switch (trim($p['passfor'])) {
 
@@ -487,6 +487,17 @@ class PassController extends BaseController
         $user_ip  = $_SESSION["admin_user"]["username"];
         // ========== DUPLICATE PASS CHECK ==========
         $model = new Pass();
+        // Advocate details
+        $advDetails = $this->getAdvocateDetails($adv_code);
+
+        if (empty($advDetails['enroll_num'])) {
+            echo json_encode([
+                "status"  => "ERROR",
+                "code"=>404,
+                "message" => "Advocate is not registered in the Gate Pass system. Please register first to continue."
+            ]);
+            return;
+        }
 
         if ($model->isAdvocatePassExists($cino, $adv_code, $courtno, $itemno, $cldt)) {
             echo json_encode([
@@ -498,8 +509,7 @@ class PassController extends BaseController
         // Generate pass no
         $pass_no = $cltype . date("dmY", strtotime($cldt)) . $courtno . $itemno . date("His");
 
-        // Advocate details
-        $advDetails = $this->getAdvocateDetails($adv_code);
+
         $paddress    = $advDetails['address']     ?? '';
         $adv_enroll  = $advDetails['enroll_num']  ?? null;
         $sql = "INSERT INTO gatepass_details
@@ -553,6 +563,22 @@ class PassController extends BaseController
         $partynm   = $this->decodeField($_POST["lit_name"])  ?? '';
         $partymob  = $this->decodeField($_POST["lit_mobile"]) ?? '';
         $adv_code  = $this->decodeField($_POST["recommended_code"]) ?? '';
+        $sideText = '';
+        if ($adv_type == 1) {
+            $sideText = ' (Petitioner side)';
+        } elseif ($adv_type == 2) {
+            $sideText = ' (Respondent side)';
+        }
+        if ($adv_code == 0) {
+            echo json_encode([
+                "status"  => "ERROR",
+                "code"=>404,
+                "message" => "Advocate{$sideText} is not registered in the Gate Pass system. Please register first."
+            ]);
+            return;
+        }
+
+
         $user_ip  = $_SESSION["admin_user"]["username"];
         // VALID MOBILE
         if (!preg_match('/^[6-9][0-9]{9}$/', $partymob)) {
@@ -565,7 +591,17 @@ class PassController extends BaseController
             echo json_encode(["status" => "ERROR", "message" => "Litigant name and mobile are required."]);
             return;
         }
+        // Advocate details
+        $advDetails = $this->getAdvocateDetails($adv_code);
 
+        if (empty($advDetails['enroll_num'])) {
+            echo json_encode([
+                "status"  => "ERROR",
+                 "code"=>404,
+                "message" => "Advocate{$sideText} is not registered in the Gate Pass system. Please register first."
+            ]);
+            return ;
+        }
 
         // ===== DUPLICATE CHECK =====
         $model = new Pass();
@@ -587,8 +623,7 @@ class PassController extends BaseController
         // Generate pass no
         $pass_no = $cltype . date("dmY", strtotime($cldt)) . $courtno . $itemno . date("His");
 
-        // Advocate details
-        $advDetails = $this->getAdvocateDetails($adv_code);
+
         $paddress    = $this->decodeField($_POST["lit_address"])  ?? '';
         $adv_enroll  = $advDetails['enroll_num']  ?? null;
         $sql = "INSERT INTO gatepass_details

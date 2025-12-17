@@ -380,10 +380,108 @@
             });
     });
 
+    function submitAdvocateRegisterForm() {
+
+        const form = document.getElementById("advRegisterForm");
+        if (!form) return;
+
+        let fd = new FormData();
+
+        // 🔐 Encode & append fields
+        fd.append("enroll_no", safeEncode(form.enroll_no.value.trim()));
+        fd.append("name", safeEncode(form.name.value.trim()));
+        fd.append("gender", safeEncode(form.gender.value));
+        fd.append("mobile", safeEncode(form.mobile.value.trim()));
+
+        showLoader();
+
+        fetch("/HC-EPASS-MVC/public/index.php?r=auth/registerAdvocateAjax", {
+                method: "POST",
+                body: fd
+            })
+            .then(res => res.json())
+            .then(resp => {
+                hideLoader();
+
+                if (resp.status === "ERROR") {
+                    showError(resp.message || "Registration failed.");
+                    return;
+                }
+
+                showSuccess("Advocate registered successfully. Please continue.");
+
+                // 🔄 Reload to refresh advocate list
+                setTimeout(() => {
+                    location.reload();
+                }, 1200);
+            })
+            .catch(() => {
+                hideLoader();
+                showError("Server error. Please try again.");
+            });
+    }
+
+    function showAdvocateRegisterForm(message) {
+        const box = document.getElementById("case-result");
+
+        box.style.display = "block";
+        box.innerHTML = `
+        <div class="card form-container new-pass-box" style="margin-top:25px;border-left:5px solid #dc2626">
+            <h3 class="pass-title" style="color:#dc2626">Advocate Registration Required</h3>
+
+            <p style="font-weight:600;color:#991b1b">
+                ${message || 'Advocate is not registered in the Gate Pass system.'}
+            </p>
+
+           <form id="advRegisterForm" onsubmit="return false;">
+
+    <div class="grid-container">
+
+        <div class="form-group">
+            <label>Enrollment Number</label>
+            <input type="text" name="enroll_no" required>
+        </div>
+
+        <div class="form-group">
+            <label>Advocate Name</label>
+            <input type="text" name="name" required>
+        </div>
+
+        <div class="form-group">
+            <label>Gender</label>
+            <select name="gender" required>
+                <option value="">-- Select --</option>
+                <option value="M">Male</option>
+                <option value="F">Female</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Mobile Number</label>
+            <input type="text" name="mobile" maxlength="10" required>
+        </div>
+
+    </div>
+
+    <button type="button" class="generate-btn" onclick="submitAdvocateRegisterForm()">
+        Register Advocate
+    </button>
+
+    <button type="button" class="generate-btn" style="background:#6b7280;margin-left:10px"
+        onclick="location.reload()">
+        Cancel
+    </button>
+
+</form>
+
+        </div>
+    `;
+    }
+
+
     function submitPassData(encodedData, advName, advSide) {
 
         let data = JSON.parse(decodeURIComponent(encodedData));
-
         let fd = new FormData();
 
         // Encrypt everything before sending
@@ -410,12 +508,14 @@
             .then(res => res.json())
             .then(response => {
                 hideLoader();
-
+                if (response.status === "ERROR" && response.code === 404) {
+                    showAdvocateRegisterForm(response.message);
+                    return;
+                }
                 if (response.status === "ERROR") {
                     showError(response.message || "Something went wrong.");
                     return;
                 }
-
                 showSuccess("Pass Generated Successfully! <br> PASS NO: <b>" + response.pass_no + "</b>");
 
                 setTimeout(() => {
@@ -435,7 +535,15 @@
 
         let data = JSON.parse(decodeURIComponent(encodedData));
         let selected = document.getElementById("adv_select").value;
+        // let [advName, advSide, advMobile, adv_code] = selected.split("||");
         let [advName, advSide, advMobile, adv_code] = selected.split("||");
+
+        // sanitize all fields
+        advName = (advName && advName !== 'null' && advName !== 'undefined') ? advName : '';
+        advSide = (advSide && advSide !== 'null' && advSide !== 'undefined') ? advSide : '';
+        advMobile = (advMobile && advMobile !== 'null' && advMobile !== 'undefined') ? advMobile : '';
+        adv_code = (adv_code && adv_code !== 'null' && adv_code !== 'undefined') ? adv_code : '';
+
         if (document.getElementById("adv_code")) {
             document.getElementById("adv_code").value = adv_code;
         }
@@ -453,7 +561,8 @@
 
                 <div class="form-group">
                     <label>Advocate Mobile</label>
-                    <input type="text" id="adv_mobile" value="${advMobile}" readonly>
+                    <input type="text" id="adv_mobile" value="${advMobile ? advMobile : ''}" readonly>
+
                 </div>
 
                 <div class="form-group">
