@@ -221,8 +221,6 @@
 
 <script>
     $(document).ready(function() {
-
-        // INIT SELECT2
         $('#sections').select2({
             placeholder: "Select Sections",
             allowClear: true,
@@ -307,7 +305,7 @@
             $.ajax({
                 url: "/HC-EPASS-MVC/public/index.php?r=pass/saveAdvocateSection",
                 type: "POST",
-                data: encryptedData, // 🔥 ENCRYPTED DATA ONLY
+                data: encryptedData,
                 dataType: "json",
 
                 success: function(res) {

@@ -882,7 +882,7 @@ class PassController extends BaseController
 
      <tr>
         <td width="50%"><b>Pass recommended by</b></td>
-        <td width="50%">' . $adv_name . '</td>
+        <td width="50%"> ADV. ' . htmlspecialchars($adv_name) . '</td>
 
     </tr>
 </table>
@@ -894,7 +894,7 @@ class PassController extends BaseController
 
     <tr>
         <td width="75%">
-            This entry pass is issued for 
+            This entry pass is issued for  Mr./Ms./Mrs./Shri/Smt.
             <b>' . $p['party_name'] . ' R/O ' . $address . '</b>
             and valid for case hearing on <b>' . $valid . ' only. </b> Litigant must carry a valid Photo ID with this ePass.
         </td>
@@ -969,7 +969,7 @@ class PassController extends BaseController
 
     <tr>
       <td width="75%">
-    This entry pass is issued for <b>' . $p['party_name'] . '</b>
+    This entry pass is issued for  Mr./Ms./Mrs./Shri/Smt. <b>' . $p['party_name'] . '</b>
     and is valid for item no. <b>' . $p['item_no'] . '</b> in court no.
     <b>' . $p['court_no'] . '</b>.
     This pass is valid for case hearing on <b>' . $valid . '</b> only.
@@ -1064,7 +1064,7 @@ class PassController extends BaseController
 
     <tr>
         <td width="75%">
-            This entry pass is issued for 
+            This entry pass is issued for  ADV.
             <b>' . $adv_name . ' R/O ' . $address . '</b>
             and valid for case hearing on <b>' . $valid . '</b>.
         </td>
@@ -1103,8 +1103,6 @@ class PassController extends BaseController
             ]);
             return;
         }
-
-        // Fetch advocate details
         $adv = $this->getAdvocateDetailsByEnroll($enroll);
 
         if ($adv["enroll_num"] === null) {
@@ -1478,7 +1476,7 @@ class PassController extends BaseController
                 </tr>
             <tr>
             <td width="50%"><b>Pass recommended by</b></td>
-                <td width="50%">' . $advName . '</td>
+                <td width="50%"> ADV. ' . $advName . '</td>
             </tr>
 
 </table>
@@ -1504,7 +1502,7 @@ class PassController extends BaseController
     <!-- Main Body -->
     <tr>
         <td colspan="3">
-            This entry pass is issued for 
+            This entry pass is issued for Mr./Ms./Mrs./Shri/Smt.
             <b>' . $litigantname . ', R/O ' . $address . '</b>,  and is valid for 
             Ancillary Purposes other than court hearing on 
             <b>' . $valid . '</b> only.Litigant must carry a valid Photo ID with this ePass.
@@ -1605,7 +1603,7 @@ class PassController extends BaseController
     <!-- Main Body -->
     <tr>
         <td colspan="3">
-            This entry pass is issued for 
+            This entry pass is issued for Mr./Ms./Mrs./Shri/Smt.
             <b>' . $litigantname . ', R/O ' . $address . '</b>,  and is valid for 
             Ancillary Purposes other than court hearing on 
             <b>' . $valid . '</b> only.Party in Person must carry a valid Photo ID with
@@ -1733,7 +1731,7 @@ this ePass.
     <!-- Main Body -->
     <tr>
         <td colspan="3">
-            This entry pass is issued for 
+            This entry pass is issued for ADV.
             <b>' . $advName . ', R/O ' . $address . '</b>, Advocate and is valid for 
             Ancillary Purposes other than court hearing on 
             <b>' . $valid . '</b> only.

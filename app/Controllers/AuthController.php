@@ -222,4 +222,178 @@ class AuthController extends BaseController
             "users" => $users
         ]);
     }
+
+
+    public function findByEnroll()
+    {
+        $this->requireRole([10]);
+
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode([
+                "status" => "ERROR",
+                "message" => "Invalid request"
+            ]);
+            return;
+        }
+
+        // 🔐 Decode enroll number (important)
+        $enrollEnc = $_POST['enroll_no'] ?? '';
+        $enrollNo  = trim($this->decodeField($enrollEnc));
+
+        if ($enrollNo === '') {
+            echo json_encode([
+                "status" => "ERROR",
+                "message" => "Enrollment number required"
+            ]);
+            return;
+        }
+        $sql = "
+        SELECT *
+        FROM advocate_t
+        WHERE adv_reg = :enroll
+        LIMIT 1
+    ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            ":enroll" => $enrollNo
+        ]);
+
+        $adv = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$adv) {
+            echo json_encode([
+                "status" => "NOT_FOUND",
+                "message" => "Advocate not found in High Court records"
+            ]);
+            return;
+        }
+
+        echo json_encode([
+            "status" => "FOUND",
+            "data" => [
+                "adv_code"   => $adv["adv_code"],
+                "adv_reg"    => $adv["adv_reg"],
+                "adv_name"   => $adv["adv_name"],
+                "mobile"     => $adv["adv_mobile"],
+                "email"      => $adv["email"],
+                "gender"     => $adv["adv_sex"],
+                "adv_type"   => $adv["advocate_type"],
+                "address"   => $adv["address"]
+
+            ]
+        ]);
+    }
+
+
+
+    public function registerAdvocateAjax()
+    {
+        $this->requireRole([10]);
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(["status" => "ERROR", "message" => "Invalid request"]);
+            return;
+        }
+        $enrollNo = trim($this->decodeField($_POST['enroll_no'] ?? ''));
+        $passtype = $_POST['passtype'] ?? '';
+        $mobile   = trim($this->decodeField($_POST['mobile'] ?? ''));
+        $email    = trim($this->decodeField($_POST['email'] ?? ''));
+        $address  = trim($this->decodeField($_POST['address'] ?? ''));
+
+        // 🔒 Basic validation
+        if ($enrollNo === '') {
+            echo json_encode(["status" => "ERROR", "message" => "Enrollment required"]);
+            return;
+        }
+
+        if (!in_array($passtype, ['1', '2', '3'], true)) {
+            echo json_encode(["status" => "ERROR", "message" => "Invalid pass type"]);
+            return;
+        }
+
+        if ($mobile === '') {
+            echo json_encode(["status" => "ERROR", "message" => "Mobile number required"]);
+            return;
+        }
+
+        if ($address === '') {
+            echo json_encode(["status" => "ERROR", "message" => "Address required"]);
+            return;
+        }
+        if ($email && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            echo json_encode(["status" => "ERROR", "message" => "Invalid email format"]);
+            return;
+        }
+        $chk = $this->pdo->prepare(
+            "SELECT id FROM gatepass_users WHERE enroll_num = :enroll LIMIT 1"
+        );
+        $chk->execute([":enroll" => $enrollNo]);
+        if ($chk->fetch()) {
+            echo json_encode(["status" => "ERROR", "message" => "Advocate already registered"]);
+            return;
+        }
+        $stmt = $this->pdo->prepare(
+            "SELECT adv_code, adv_name, adv_sex
+         FROM advocate_t
+         WHERE adv_reg = :enroll
+         LIMIT 1"
+        );
+        $stmt->execute([":enroll" => $enrollNo]);
+        $adv = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$adv) {
+            echo json_encode(["status" => "ERROR", "message" => "Advocate record not found"]);
+            return;
+        }
+
+        // Gender mapping
+        $gender = ($adv['adv_sex'] == '2') ? 'F' : 'M';
+
+        // 🔐 DEFAULT PASSWORD
+        $defaultPassword = 'hcgatepass@1234';
+        $hashPwd = password_hash($defaultPassword, PASSWORD_BCRYPT);
+
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+
+        // ✅ INSERT
+        $sql = "
+        INSERT INTO gatepass_users
+        (
+            name, email, password, enroll_num,
+            gender, contact_num,
+            status, ip, created,
+            role_id, passtype, adv_code, address
+        )
+        VALUES
+        (
+            :name, :email, :password, :enroll,
+            :gender, :mobile,
+            'A', :ip, NOW(),
+            2, :passtype, :adv_code, :address
+        )
+    ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            ":name"     => $adv['adv_name'],
+            ":email"    => $email ?: null,
+            ":password" => $hashPwd,
+            ":enroll"   => $enrollNo,
+            ":gender"   => $gender,
+            ":mobile"   => $mobile,
+            ":ip"       => $ip,
+            ":passtype" => $passtype,
+            ":adv_code" => $adv['adv_code'],
+            ":address"  => $address
+        ]);
+
+        echo json_encode([
+            "status"  => "OK",
+            "message" => "Advocate registered successfully. Default password is hcgatepass@1234"
+        ]);
+    }
 }

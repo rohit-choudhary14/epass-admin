@@ -48,12 +48,12 @@ body {
 
         <a class="btn-choice"
            href="/HC-EPASS-MVC/public/index.php?r=pass/courtForm&type=advocate">
-            Advocate Going to Court
+            For Court
         </a>
 
         <a class="btn-choice"
            href="/HC-EPASS-MVC/public/index.php?r=pass/generateForm&type=advocate&goto=section">
-            Advocate Going to Section
+            For Section
         </a>
 
     <?php elseif ($type === 'litigant'): ?>
@@ -61,12 +61,12 @@ body {
 
         <a class="btn-choice"
            href="/HC-EPASS-MVC/public/index.php?r=pass/courtForm&type=litigant">
-            Litigant Going to Court
+            For Court
         </a>
 
         <a class="btn-choice"
            href="/HC-EPASS-MVC/public/index.php?r=pass/generateForm&type=litigant&goto=section">
-            Litigant Going to Section
+            For Section
         </a>
 
         <?php elseif ($type === 'partyinperson'): ?>
@@ -74,12 +74,12 @@ body {
 
         <a class="btn-choice"
            href="/HC-EPASS-MVC/public/index.php?r=pass/courtForm&type=partyinperson">
-            Party Going to Court
+            For Court
         </a>
 
         <a class="btn-choice"
            href="/HC-EPASS-MVC/public/index.php?r=pass/generateForm&type=partyinperson&goto=section">
-            Party Going to Section
+            For Section
         </a>
 
     <?php else: ?>

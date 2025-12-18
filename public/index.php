@@ -23,6 +23,9 @@ switch ($controller) {
         elseif ($action === 'registerOfficerPost' && $_SERVER['REQUEST_METHOD'] === 'POST') $c->registerOfficerPost();
         elseif ($action === 'userList') $c->userList();
         elseif ($action === 'logout') $c->logout();
+        elseif ($action === 'findAdvDetails') $c->findByEnroll();
+        elseif ($action === 'registerAdvocateAjax') $c->registerAdvocateAjax();
+
         else $c->loginForm();
         break;
 
@@ -45,7 +48,7 @@ switch ($controller) {
         if ($action === 'dashboard') $c->dashboard();
         elseif ($action === 'ch_estab') $c->changeEstablishment();
         elseif ($action === 'saveEstablishment' && $_SERVER['REQUEST_METHOD'] === 'POST')
-    $c->saveEstablishment();
+        $c->saveEstablishment();
         else $c->dashboard();
         break;
 
@@ -84,6 +87,9 @@ switch ($controller) {
         elseif ($action === 'viewSectionAdvocate') $c->viewSection();
         elseif ($action === 'viewSectionLitigant') $c->viewSection();
         elseif ($action === 'viewSectionParty') $c->viewSection();
+
+
+         
 
 
 

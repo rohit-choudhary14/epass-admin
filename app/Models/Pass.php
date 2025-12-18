@@ -639,7 +639,7 @@ class Pass extends BaseModel
             ":item"  => $itemNo,
             ":cldt"  => date("Y-m-d", strtotime($cldt))
         ]);
-
+       
         return $stmt->fetchColumn() ? true : false;
     }
 
