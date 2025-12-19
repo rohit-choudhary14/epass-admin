@@ -1,4 +1,5 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
+<?php include __DIR__ . '/../layouts/advreg.php'; ?>
 
 <style>
     /* ⭐ your styles remain untouched ⭐ */
@@ -119,6 +120,164 @@
         background: #047857;
     }
 </style>
+
+<style>
+    body {
+        padding: 0px !important;
+        margin: 0px !important;
+        font-family: Arial, sans-serif;
+    }
+
+    .page-container {
+        max-width: 900px;
+        margin: 30px auto;
+        font-family: "Inter", sans-serif;
+    }
+
+
+
+    .form-container {
+        max-width: 900px;
+        margin: 20px auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 20px;
+    }
+
+    label {
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #555;
+    }
+
+    input,
+    select {
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        outline: none;
+    }
+
+    input:focus,
+    select:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    }
+
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        color: #fff;
+        background-color: #007bff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 100%;
+        transition: background-color 0.3s;
+    }
+
+    button:hover {
+        background-color: #0056b3;
+    }
+
+    button:focus {
+        outline: none;
+    }
+
+    /* Media query for responsiveness */
+    @media (max-width: 768px) {
+        .grid-container {
+            grid-template-columns: 1fr;
+            /* Single column layout on small screens */
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        button {
+            width: auto;
+            margin-top: 20px;
+        }
+    }
+
+    /* Small screen padding adjustments */
+    @media (max-width: 480px) {
+        .form-container {
+            padding: 15px;
+        }
+
+        input,
+        select,
+        button {
+            font-size: 14px;
+        }
+    }
+
+    #case-result {
+        margin-top: 25px;
+        padding: 20px;
+        display: none;
+        border-radius: 12px;
+        background: #eef2ff;
+        border-left: 5px solid #4f46e5;
+    }
+
+    .result-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .generate-btn {
+        margin-top: 10px;
+        padding: 12px;
+        width: auto;
+        background: #059669;
+        color: white;
+        border: none;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    .generate-btn:hover {
+        background: #047857;
+    }
+
+    .new-pass-box {
+        padding: 30px;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e5e7eb;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .pass-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1e3a8a;
+        text-align: center;
+        margin-bottom: 25px;
+    }
+</style>
+
 
 <div class="page-container">
 
@@ -260,13 +419,13 @@
         `;
         } else {
             // If both side advocates exist
-            partySelectHTML = `
-            <label>Select Party (Litigant)</label>
-            <select id="party_side">
-                <option value="1">Petitioner</option>
-                <option value="2">Respondent</option>
-            </select>
-        `;
+        //     partySelectHTML = `
+        //     <label>Select Party (Litigant)</label>
+        //     <select id="party_side">
+        //         <option value="1">Petitioner</option>
+        //         <option value="2">Respondent</option>
+        //     </select>
+        // `;
         }
 
         box.style.display = "block";
@@ -430,10 +589,19 @@
 
                 hideLoader();
 
-                if (resp.status === "ERROR") {
-                    showError(resp.message || "Unable to generate litigant pass.");
+                if (resp.status === "ERROR" && resp.code === 404) {
+                    showAdvocateRegisterForm(resp.message);
                     return;
                 }
+                if (resp.status === "ERROR") {
+                    showError(resp.message || "Something went wrong.");
+                    return;
+                }
+
+                // if (resp.status === "ERROR") {
+                //     showError(resp.message || "Unable to generate litigant pass.");
+                //     return;
+                // }
 
                 showSuccess("Litigant Pass Generated! <br> PASS NO: <b>" + resp.pass_no + "</b>");
 

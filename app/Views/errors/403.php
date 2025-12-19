@@ -55,7 +55,7 @@
     <?php if($_SESSION['admin_user']['role_id'] == 20): ?>
         <a class="btn" href="/HC-EPASS-MVC/public/index.php?r=dashboard/index">Go to Admin Dashboard</a>
     <?php else: ?>
-        <a class="btn" href="/HC-EPASS-MVC/public/index.php?r=officer/dashboard">Go to Officer Dashboard</a>
+        <a class="btn" href="/HC-EPASS-MVC/public/index.php?r=officer/dashboard">Dashboard</a>
     <?php endif; ?>
 </div>
 

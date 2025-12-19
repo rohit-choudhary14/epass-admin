@@ -87,3 +87,11 @@ invalid data source name
 SQLSTATE[08006] [7] server closed the connection unexpectedly
 	This probably means the server terminated abnormally
 	before or while processing the request.
+SQLSTATE[08006] [7] FATAL:  no pg_hba.conf entry for host "10.68.130.16", user "postgres", database "jaipur_new", SSL off
+SQLSTATE[08006] [7] FATAL:  no pg_hba.conf entry for host "10.68.130.16", user "postgres", database "jaipur_new", SSL off
+SQLSTATE[08006] [7] server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+SQLSTATE[08006] [7] server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.

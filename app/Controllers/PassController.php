@@ -493,7 +493,7 @@ class PassController extends BaseController
         if (empty($advDetails['enroll_num'])) {
             echo json_encode([
                 "status"  => "ERROR",
-                "code"=>404,
+                "code" => 404,
                 "message" => "Advocate is not registered in the Gate Pass system. Please register first to continue."
             ]);
             return;
@@ -572,7 +572,7 @@ class PassController extends BaseController
         if ($adv_code == 0) {
             echo json_encode([
                 "status"  => "ERROR",
-                "code"=>404,
+                "code" => 404,
                 "message" => "Advocate{$sideText} is not registered in the Gate Pass system. Please register first."
             ]);
             return;
@@ -597,10 +597,10 @@ class PassController extends BaseController
         if (empty($advDetails['enroll_num'])) {
             echo json_encode([
                 "status"  => "ERROR",
-                 "code"=>404,
+                "code" => 404,
                 "message" => "Advocate{$sideText} is not registered in the Gate Pass system. Please register first."
             ]);
-            return ;
+            return;
         }
 
         // ===== DUPLICATE CHECK =====
@@ -882,7 +882,7 @@ class PassController extends BaseController
 
      <tr>
         <td width="50%"><b>Pass recommended by</b></td>
-        <td width="50%"> ADV. ' . htmlspecialchars($adv_name) . '</td>
+        <td width="50%"> Ad. ' . htmlspecialchars($adv_name) . '</td>
 
     </tr>
 </table>
@@ -894,7 +894,7 @@ class PassController extends BaseController
 
     <tr>
         <td width="75%">
-            This entry pass is issued for  Mr./Ms./Mrs./Shri/Smt.
+            This entry pass is issued for  Mr./Ms./Mrs.
             <b>' . $p['party_name'] . ' R/O ' . $address . '</b>
             and valid for case hearing on <b>' . $valid . ' only. </b> Litigant must carry a valid Photo ID with this ePass.
         </td>
@@ -969,7 +969,7 @@ class PassController extends BaseController
 
     <tr>
       <td width="75%">
-    This entry pass is issued for  Mr./Ms./Mrs./Shri/Smt. <b>' . $p['party_name'] . '</b>
+    This entry pass is issued for  Mr./Ms./Mrs. <b>' . $p['party_name'] . '</b>
     and is valid for item no. <b>' . $p['item_no'] . '</b> in court no.
     <b>' . $p['court_no'] . '</b>.
     This pass is valid for case hearing on <b>' . $valid . '</b> only.
@@ -1064,7 +1064,7 @@ class PassController extends BaseController
 
     <tr>
         <td width="75%">
-            This entry pass is issued for  ADV.
+            This entry pass is issued for  Ad.
             <b>' . $adv_name . ' R/O ' . $address . '</b>
             and valid for case hearing on <b>' . $valid . '</b>.
         </td>
@@ -1107,18 +1107,14 @@ class PassController extends BaseController
 
         if ($adv["enroll_num"] === null) {
             echo json_encode([
-                "status" => "ERROR",
-                "message" => "Advocate not found for this enrollment number."
+                "status"  => "ERROR",
+                "code" => 404,
+                "message" => "Advocate is not registered in the Gate Pass system. Please register first to continue."
             ]);
             return;
         }
-
-        // purpose_of_visit → only IDs
         $purposeIds = implode(",", $sections);
-
-        // purposermks → JSON of remarks
         $remarkList = [];
-
         foreach ($sections as $sid) {
             $remarkList[] = [
                 "purpose" => $sid,
@@ -1146,8 +1142,8 @@ class PassController extends BaseController
             "adv_enroll"  => $enroll,
             "pass_no"     => $passNo,
 
-            "purpose_ids" => $purposeIds,   // <-- only numbers
-            "remarks"     => $remarkJson,   // <-- JSON string
+            "purpose_ids" => $purposeIds,
+            "remarks"     => $remarkJson,
 
             "passfor"     => "S",
             "passtype"    => 3
@@ -1192,8 +1188,9 @@ class PassController extends BaseController
 
         if ($adv["enroll_num"] === null) {
             echo json_encode([
-                "status" => "ERROR",
-                "message" => "Advocate not found for this enrollment number."
+                "status"  => "ERROR",
+                "code" => 404,
+                "message" => "Advocate is not registered in the Gate Pass system. Please register first to continue."
             ]);
             return;
         }
@@ -1246,7 +1243,7 @@ class PassController extends BaseController
         echo json_encode([
             "status"   => "OK",
             "message"  => "Section pass generated successfully.",
-            "redirect" => "/HC-EPASS-MVC/public/index.php?r=pass/viewSection&id=" . $ok
+            "redirect" => "/HC-EPASS-MVC/public/index.php?r=pass/viewSectionLitigant&id=" . $ok
         ]);
     }
 
@@ -1342,7 +1339,7 @@ class PassController extends BaseController
         echo json_encode([
             "status"   => "OK",
             "message"  => "Section pass generated successfully.",
-            "redirect" => "/HC-EPASS-MVC/public/index.php?r=pass/viewSection&id=" . $ok
+            "redirect" => "/HC-EPASS-MVC/public/index.php?r=pass/viewSectionParty&id=" . $ok
         ]);
     }
     public function viewSection()
@@ -1476,7 +1473,7 @@ class PassController extends BaseController
                 </tr>
             <tr>
             <td width="50%"><b>Pass recommended by</b></td>
-                <td width="50%"> ADV. ' . $advName . '</td>
+                <td width="50%"> Ad. ' . $advName . '</td>
             </tr>
 
 </table>
@@ -1502,7 +1499,7 @@ class PassController extends BaseController
     <!-- Main Body -->
     <tr>
         <td colspan="3">
-            This entry pass is issued for Mr./Ms./Mrs./Shri/Smt.
+            This entry pass is issued for Mr./Ms./Mrs.
             <b>' . $litigantname . ', R/O ' . $address . '</b>,  and is valid for 
             Ancillary Purposes other than court hearing on 
             <b>' . $valid . '</b> only.Litigant must carry a valid Photo ID with this ePass.
@@ -1603,7 +1600,7 @@ class PassController extends BaseController
     <!-- Main Body -->
     <tr>
         <td colspan="3">
-            This entry pass is issued for Mr./Ms./Mrs./Shri/Smt.
+            This entry pass is issued for Mr./Ms./Mrs.
             <b>' . $litigantname . ', R/O ' . $address . '</b>,  and is valid for 
             Ancillary Purposes other than court hearing on 
             <b>' . $valid . '</b> only.Party in Person must carry a valid Photo ID with
@@ -1731,7 +1728,7 @@ this ePass.
     <!-- Main Body -->
     <tr>
         <td colspan="3">
-            This entry pass is issued for ADV.
+            This entry pass is issued for Ad.
             <b>' . $advName . ', R/O ' . $address . '</b>, Advocate and is valid for 
             Ancillary Purposes other than court hearing on 
             <b>' . $valid . '</b> only.

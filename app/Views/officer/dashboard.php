@@ -166,7 +166,7 @@
     $estName = $map[$est] ?? "N/A";
     ?>
 
-    <h2 class="page-title">Officer Dashboard (<?= $estName ?>)</h2>
+    <h2 class="page-title"> Dashboard (<?= $estName ?>)</h2>
 
     <!-- GRID BUTTONS -->
     <div class="dashboard-grid">
@@ -184,25 +184,25 @@
             <h3>Party In Person</h3>
             <p>Generate pass for Party in person</p>
         </div>
-         <div class="dashboard-card" onclick="window.location.href='/HC-EPASS-MVC/public/index.php?r=pass/generate&type=partyinperson';">
+         <!-- <div class="dashboard-card" onclick="window.location.href='/HC-EPASS-MVC/public/index.php?r=pass/generate&type=partyinperson';">
             <h3>Vendor Pass</h3>
             <p>Generate pass for Vendor</p>
-        </div>
+        </div> -->
     </div>
 
     <!-- SEARCH BLOCK -->
-    <div class="search-box">
+    <!-- <div class="search-box">
         <h3>Search Generated Passes</h3>
         <form method="get" action="/HC-EPASS-MVC/public/index.php">
             <input type="hidden" name="r" value="pass/searchOfficer">
             <input type="text" name="q" placeholder="Search by Pass No / Name / CINO..." required>
             <button class="search-btn" type="submit">Search</button>
         </form>
-    </div>
+    </div> -->
 
     <!-- PROFILE INFO -->
     <div class="profile-box">
-        <p><b>Officer:</b> <?= htmlspecialchars($_SESSION['admin_user']['name'] ?? 'N/A') ?></p>
+        <p><b>User:</b> <?= htmlspecialchars($_SESSION['admin_user']['name'] ?? 'N/A') ?></p>
         <p><b>Role:</b> <?= htmlspecialchars($_SESSION['admin_user']['role'] ?? 'N/A') ?></p>
         <p><b>Department:</b> <?= htmlspecialchars($_SESSION['admin_user']['department'] ?? 'N/A') ?></p>
     </div>
