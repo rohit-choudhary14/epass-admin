@@ -196,7 +196,7 @@
 
                 </div>
 
-                <div class="form-group">
+                <!-- <div class="form-group">
                     <label for="cl_type">Causelist Type</label>
                     <select name="cl_type" id="cl_type" required>
                         <option value="">-- Select Causelist Type --</option>
@@ -204,7 +204,7 @@
                         <option value="D">Daily</option>
                         <option value="W">Weekly</option>
                     </select>
-                </div>
+                </div> -->
 
                 <div class="form-group">
                     <label for="cl_date">Causelist Date</label>
@@ -280,16 +280,19 @@
         }
     });
 
+    function setCauselistMaxDate() { let maxDate = new Date(); maxDate.setDate(maxDate.getDate() + 3); document.getElementById("cl_date").max = maxDate.toISOString().split("T")[0]; }
     // -------------------------------
     // LIMIT DATE TO TODAY → + 3 DAYS
     // -------------------------------
-    function setCauselistMaxDate() {
-        let maxDate = new Date();
-        maxDate.setDate(maxDate.getDate() + 3);
+//    function setCauselistMaxDate() {
+//     let today = new Date();
+//     let maxDate = new Date();
+//     maxDate.setDate(today.getDate() + 3);
+//     const input = document.getElementById("cl_date");
+//     input.min = today.toISOString().split("T")[0];
+//     input.max = maxDate.toISOString().split("T")[0];
+// }
 
-        document.getElementById("cl_date").max =
-            maxDate.toISOString().split("T")[0];
-    }
     setCauselistMaxDate();
 
     // -------------------------------
@@ -396,7 +399,7 @@
         fd.append("courtno", safeEncode(data.court_no));
         fd.append("itemno", safeEncode(data.item_no));
         fd.append("cldt", safeEncode(data.cl_date));
-        fd.append("cltype", safeEncode(data.cl_type));
+        // fd.append("cltype", safeEncode(data.cl_type));
         fd.append("paddress", safeEncode(document.getElementById("paddress").value));
         fd.append("partyno", safeEncode(document.getElementById("partyno").value));
         fd.append("partynm", safeEncode(document.getElementById("partynm").value));

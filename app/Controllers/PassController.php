@@ -312,7 +312,7 @@ class PassController extends BaseController
         // Validate
         if (
             $case_type == '' || $case_no == '' || $case_year == '' ||
-            $cl_type == '' || $cl_date == ''
+             $cl_date == ''
         ) {
             echo json_encode([
                 "status" => "ERROR",

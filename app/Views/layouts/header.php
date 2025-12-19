@@ -153,10 +153,10 @@
 
         <div class="center-title">
             <h1>Rajasthan High Court</h1>
-            <div class="sub">सत्यमेव जयते</div>
+            <div class="sub">E Gate Pass Application</div>
         </div>
 
-        <img src="/HC-EPASS-MVC/public/assets/images/Emblem_of_India.svg" class="ashoka right">
+        <img src="/HC-EPASS-MVC/public/assets/images/logo12102023.png" class="ashoka right">
     </header>
 
     <nav class="nav-black">
@@ -175,7 +175,7 @@
 
                 <!-- DROPDOWN: MY PASSES -->
                 <div class="dropdown">
-                    <button class="dropbtn">My Passes ▾</button>
+                    <button class="dropbtn">Generated Passes ▾</button>
                     <div class="dropdown-content">
                         <a href="/HC-EPASS-MVC/public/index.php?r=pass/mySectionPasses">Section Visit Passes</a>
                         <a href="/HC-EPASS-MVC/public/index.php?r=pass/myPasses">Court Passes</a>

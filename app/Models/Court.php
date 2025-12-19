@@ -20,167 +20,176 @@ class Court extends BaseModel
     }
 
 
-  
 
 
-  public function findCourtCase($case_type, $case_no, $case_year, $cl_type, $cl_date)
-{
-    $cl_date_db = date("dmY", strtotime($cl_date));
 
-    if ($cl_type == 'S') {
-        $cltypeCondition = "B.causelisttype NOT IN ('D','W','L')";
-    } else {
-        $cltypeCondition = "B.causelisttype = :cl_type";
-    }
+    public function findCourtCase($case_type, $case_no, $case_year, $cl_type, $cl_date)
+    {
+        $cl_date_db = date("dmY", strtotime($cl_date));
 
-    // Updated SQL: fetch full advocate details
-    $sql = "
-        SELECT 
-            A.cino,
+        // if ($cl_type == 'S') {
+        //     $cltypeCondition = "B.causelisttype NOT IN ('D','W','L')";
+        // } else {
+        //     $cltypeCondition = "B.causelisttype = :cl_type";
+        // }
 
-            A.pet_adv,
-            A.pet_adv_cd,
-            A.pet_mobile,
-            A.pet_email,
-          
+        // Updated SQL: fetch full advocate details
+        $sql = "
+    SELECT 
+        A.cino,
 
-            A.res_adv,
-            A.res_adv_cd,
-            A.res_mobile,
-            A.res_email,
-           
-           
+        A.pet_adv,
+        A.pet_adv_cd,
+        A.pet_mobile,
+        A.pet_email,
 
-            B.sno AS item_no,
-            B.croom AS court_no
+        A.res_adv,
+        A.res_adv_cd,
+        A.res_mobile,
+        A.res_email,
 
-        FROM civil_t A
-        INNER JOIN causelistsrno B 
-            ON (
-                (A.case_no = B.case_no AND B.con_case_no IS NULL)
-                OR
-                (A.case_no = B.con_case_no AND B.con_case_no IS NOT NULL)
-            )
-        WHERE 
-            A.regcase_type = :ct
-            AND A.reg_no = :no
-            AND A.reg_year = :yr
-            AND $cltypeCondition
-            AND B.causelistdate = :dt
-            AND B.isfinalized = 'Y'
-        LIMIT 1
-    ";
+        B.sno AS item_no,
+        B.croom AS court_no,
+        B.causelisttype
 
-    $stmt = $this->pdo->prepare($sql);
+    FROM civil_t A
+    INNER JOIN causelistsrno B 
+        ON (
+            (A.case_no = B.case_no AND B.con_case_no IS NULL)
+            OR
+            (A.case_no = B.con_case_no AND B.con_case_no IS NOT NULL)
+        )
+    WHERE 
+        A.regcase_type = :ct
+        AND A.reg_no = :no
+        AND A.reg_year = :yr
+        AND B.causelistdate = :dt
+        AND B.isfinalized = 'Y'
+    LIMIT 1
+";
 
-    $params = [
-        ":ct" => $case_type,
-        ":no" => $case_no,
-        ":yr" => $case_year,
-        ":dt" => $cl_date_db
-    ];
-    if ($cl_type != 'S') {
-        $params[":cl_type"] = $cl_type;
-    }
 
-    $stmt->execute($params);
-    $case = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt = $this->pdo->prepare($sql);
 
-    if (!$case) {
-        return ["status" => "NOT_FOUND", "message" => "No entry in causelist"];
-    }
-
-    $cino = $case["cino"];
-    $adv_list = [];
-
-    // Mapping for readable labels
-    $sideLabel = [
-        1 => "Petitioner",
-        2 => "Respondent"
-    ];
-
-    // PETITIONER ADVOCATE
-    if (!empty(trim($case["pet_adv"]))) {
-
-        $adv_list[] = [
-            "name"        => trim($case["pet_adv"]),
-            "side"        => 1,
-            "side_label"  => $sideLabel[1],
-
-            "adv_code"    => $case["pet_adv_cd"],
-            "enroll_num"  => $case["pet_adv_cd"],     // Same column used for enrollment
-            "mobile"      => $case["pet_mobile"],
-            "email"       => $case["pet_email"],
-            // "paddress"    => $case["pet_address"]
+        $params = [
+            ":ct" => $case_type,
+            ":no" => $case_no,
+            ":yr" => $case_year,
+            ":dt" => $cl_date_db
         ];
-    }
+        // if ($cl_type != 'S') {
+        //     $params[":cl_type"] = $cl_type;
+        // }
 
-    // RESPONDENT ADVOCATE
-    if (!empty(trim($case["res_adv"]))) {
+        $stmt->execute($params);
+        $case = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $adv_list[] = [
-            "name"        => trim($case["res_adv"]),
-            "side"        => 2,
-            "side_label"  => $sideLabel[2],
-
-            "adv_code"    => $case["res_adv_cd"],
-            "enroll_num"  => $case["res_adv_cd"],
-            "mobile"      => $case["res_mobile"],
-            "email"       => $case["res_email"],
-            // "paddress"    => $case["res_address"]
+        if (!$case) {
+            return ["status" => "NOT_FOUND", "message" => "No entry in causelist"];
+        }
+        $caseTypeMap = [
+            'D' => 'Daily',
+            'S' => 'Supplementary',
+            'W' => 'Weekly',
+            'L' => 'Lok Adalat'
         ];
-    }
 
-    // EXTRA ADVOCATES
-    $sql2 = "SELECT adv_name, type FROM extra_adv_t WHERE cino=:cino AND trim(adv_name) <> ''";
-    $stmt2 = $this->pdo->prepare($sql2);
-    $stmt2->execute([":cino" => $cino]);
+        $dbCaseType     = $case['causelisttype'] ?? null;
+        $caseTypeText   = $caseTypeMap[$dbCaseType] ?? 'Other';
+        $cino = $case["cino"];
+        $adv_list = [];
 
-    foreach ($stmt2->fetchAll(PDO::FETCH_ASSOC) as $row) {
-        if (!empty(trim($row["adv_name"]))) {
+        // Mapping for readable labels
+        $sideLabel = [
+            1 => "Petitioner",
+            2 => "Respondent"
+        ];
 
-            // No details exist for extra advocates in civil_t
+        // PETITIONER ADVOCATE
+        if (!empty(trim($case["pet_adv"]))) {
+
             $adv_list[] = [
-                "name"       => trim($row["adv_name"]),
-                "side"       => $row["type"],
-                "side_label" => $sideLabel[$row["type"]],
-                "mobile"     => null,
-                "adv_code"   => null,
-                "enroll_num" => null,
-                "paddress"   => null
+                "name"        => trim($case["pet_adv"]),
+                "side"        => 1,
+                "side_label"  => $sideLabel[1],
+
+                "adv_code"    => $case["pet_adv_cd"],
+                "enroll_num"  => $case["pet_adv_cd"],     // Same column used for enrollment
+                "mobile"      => $case["pet_mobile"],
+                "email"       => $case["pet_email"],
+                // "paddress"    => $case["pet_address"]
             ];
         }
-    }
 
-    // ADDRESS ADVOCATES
-    $sql3 = "SELECT adv_name, type FROM civ_address_t WHERE cino=:cino AND display='Y' AND trim(adv_name) <> ''";
-    $stmt3 = $this->pdo->prepare($sql3);
-    $stmt3->execute([":cino" => $cino]);
+        // RESPONDENT ADVOCATE
+        if (!empty(trim($case["res_adv"]))) {
 
-    foreach ($stmt3->fetchAll(PDO::FETCH_ASSOC) as $row) {
-        if (!empty(trim($row["adv_name"]))) {
             $adv_list[] = [
-                "name"       => trim($row["adv_name"]),
-                "side"       => $row["type"],
-                "side_label" => $sideLabel[$row["type"]],
-                "mobile"     => null,
-                "adv_code"   => null,
-                "enroll_num" => null,
-                "paddress"   => null
+                "name"        => trim($case["res_adv"]),
+                "side"        => 2,
+                "side_label"  => $sideLabel[2],
+
+                "adv_code"    => $case["res_adv_cd"],
+                "enroll_num"  => $case["res_adv_cd"],
+                "mobile"      => $case["res_mobile"],
+                "email"       => $case["res_email"],
+                // "paddress"    => $case["res_address"]
             ];
         }
-    }
 
-    return [
-        "status"    => "OK",
-        "cino"      => $cino,
-        "court_no"  => $case["court_no"],
-        "item_no"   => $case["item_no"],
-        "cl_date"   => $cl_date,
-        "cl_type"   => $cl_type,
-        "advocates" => $adv_list
-    ];
-}
+        // EXTRA ADVOCATES
+        $sql2 = "SELECT adv_name, type FROM extra_adv_t WHERE cino=:cino AND trim(adv_name) <> ''";
+        $stmt2 = $this->pdo->prepare($sql2);
+        $stmt2->execute([":cino" => $cino]);
+
+        foreach ($stmt2->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            if (!empty(trim($row["adv_name"]))) {
+
+                // No details exist for extra advocates in civil_t
+                $adv_list[] = [
+                    "name"       => trim($row["adv_name"]),
+                    "side"       => $row["type"],
+                    "side_label" => $sideLabel[$row["type"]],
+                    "mobile"     => null,
+                    "adv_code"   => null,
+                    "enroll_num" => null,
+                    "paddress"   => null
+                ];
+            }
+        }
+
+        // ADDRESS ADVOCATES
+        $sql3 = "SELECT adv_name, type FROM civ_address_t WHERE cino=:cino AND display='Y' AND trim(adv_name) <> ''";
+        $stmt3 = $this->pdo->prepare($sql3);
+        $stmt3->execute([":cino" => $cino]);
+
+        foreach ($stmt3->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            if (!empty(trim($row["adv_name"]))) {
+                $adv_list[] = [
+                    "name"       => trim($row["adv_name"]),
+                    "side"       => $row["type"],
+                    "side_label" => $sideLabel[$row["type"]],
+                    "mobile"     => null,
+                    "adv_code"   => null,
+                    "enroll_num" => null,
+                    "paddress"   => null
+                ];
+            }
+        }
+
+        return [
+            "status"           => "OK",
+            "cino"             => $cino,
+            "court_no"         => $case["court_no"],
+            "item_no"          => $case["item_no"],
+            "cl_date"          => $cl_date,
+            "case_type"        => $dbCaseType,      
+            "case_type_text"   => $caseTypeText,
+            "requested_type"   => $cl_type,
+
+            "advocates"        => $adv_list
+        ];
+    }
 
 
     public function generatePass(
