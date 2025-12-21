@@ -311,7 +311,7 @@
                 <select id="case_year" name="case_year" required></select>
             </div>
 
-            <div class="form-group">
+            <!-- <div class="form-group">
                 <label>Causelist Type</label>
                 <select name="cl_type" id="cl_type" required>
                     <option value="">-- Select Causelist Type --</option>
@@ -319,7 +319,7 @@
                     <option value="D">Daily</option>
                     <option value="W">Weekly</option>
                 </select>
-            </div>
+            </div> -->
 
             <div class="form-group">
                 <label>Causelist Date</label>
@@ -434,6 +434,7 @@
 
         <p><b>Court Room:</b> ${data.court_no}</p>
         <p><b>Item No:</b> ${data.item_no}</p>
+        <p><b>Cause List Type:</b> ${data.case_type_text}</p>
 
         <label><b>Pass Recommended By (Advocate)</b></label>
         <select id="recommended_adv">
@@ -576,7 +577,7 @@
         fd.append("courtno", safeEncode(data.court_no));
         fd.append("itemno", safeEncode(data.item_no));
         fd.append("cldt", safeEncode(data.cl_date));
-        fd.append("cltype", safeEncode(data.cl_type));
+        // fd.append("cltype", safeEncode(data.cl_type));
 
         showLoader();
 

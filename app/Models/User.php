@@ -113,21 +113,95 @@ class User extends BaseModel
     {
         $sql = "SELECT id, contact_num FROM gatepass_users 
             WHERE LOWER(name) = LOWER(:name)
-            AND passtype = 3 AND role_id=2"; 
+            AND passtype = 3 AND role_id=2";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([":name" => trim($name)]);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         if (!$rows) return false;
-        
+
         foreach ($rows as $row) {
 
             $decMob = $this->decryptData($row["contact_num"]);
-          
+            print_r($row);
+            echo $decMob;
+            die();
             if ($decMob == trim($mobile)) {
-             
-                return true; 
+
+                return true;
             }
         }
-        return false; 
+        return false;
+    }
+    public function findPartyByMobile($mobile)
+    {
+        $sql = "SELECT id FROM gatepass_users WHERE contact_num = :mobile LIMIT 1";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':mobile' => $mobile]);
+        return $stmt->fetch();
+    }
+    public function createPartyUser(
+        $name,
+        $mobile,
+        $email,
+        $passwordHash,
+        $roleId,
+        $passtype,
+        $est,
+        $address
+    ) {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        $created = date('Y-m-d H:i:s');
+
+        $sql = "
+        INSERT INTO gatepass_users
+        (
+            name,
+            gender,
+            contact_num,
+            email,
+            password,
+            role_id,
+            passtype,
+            ip,
+            created,
+            estt,
+            status,
+            username,
+            address
+        )
+        VALUES
+        (
+            :name,
+            :gender,
+            :mobile,
+            :email,
+            :password,
+            :role_id,
+            :passtype,
+            :ip,
+            :created,
+            :est,
+            1,
+            :username,
+            :address
+        )
+    ";
+
+        $stmt = $this->pdo->prepare($sql);
+
+        return $stmt->execute([
+            ':name'     => $name,
+            ':gender'   => 'N',
+            ':mobile'   => $this->encryptData($mobile),
+            ':email'    => $this->encryptData($email),
+            ':password' => $passwordHash,
+            ':role_id'  => $roleId,
+            ':passtype' => $passtype,
+            ':ip'       => $ip,
+            ':created'  => $created,
+            ':est'      => $est,
+            ':username' => $mobile,     // ✅ username = mobile
+            ':address'  => $address
+        ]);
     }
 }

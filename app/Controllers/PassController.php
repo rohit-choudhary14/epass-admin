@@ -696,6 +696,7 @@ class PassController extends BaseController
 
         if (!$exists) {
             echo json_encode([
+                "code"=>404,
                 "status"  => "ERROR",
                 "message" => "Party not registered as Party-in-Person. Please register first."
             ]);

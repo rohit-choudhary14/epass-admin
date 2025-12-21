@@ -280,18 +280,22 @@
         }
     });
 
-    function setCauselistMaxDate() { let maxDate = new Date(); maxDate.setDate(maxDate.getDate() + 3); document.getElementById("cl_date").max = maxDate.toISOString().split("T")[0]; }
+    function setCauselistMaxDate() {
+        let maxDate = new Date();
+        maxDate.setDate(maxDate.getDate() + 3);
+        document.getElementById("cl_date").max = maxDate.toISOString().split("T")[0];
+    }
     // -------------------------------
     // LIMIT DATE TO TODAY → + 3 DAYS
     // -------------------------------
-//    function setCauselistMaxDate() {
-//     let today = new Date();
-//     let maxDate = new Date();
-//     maxDate.setDate(today.getDate() + 3);
-//     const input = document.getElementById("cl_date");
-//     input.min = today.toISOString().split("T")[0];
-//     input.max = maxDate.toISOString().split("T")[0];
-// }
+    //    function setCauselistMaxDate() {
+    //     let today = new Date();
+    //     let maxDate = new Date();
+    //     maxDate.setDate(today.getDate() + 3);
+    //     const input = document.getElementById("cl_date");
+    //     input.min = today.toISOString().split("T")[0];
+    //     input.max = maxDate.toISOString().split("T")[0];
+    // }
 
     setCauselistMaxDate();
 
@@ -300,13 +304,16 @@
     // -------------------------------
     function updateCasePreview() {
         let ct = document.getElementById("case_type").value;
+
         let no = document.getElementById("case_no").value;
         let yr = document.getElementById("case_year").value;
-
+        let select = document.getElementById("case_type");
+        let ctValue = select.value;
+        let ctText = select.options[select.selectedIndex].text;
         if (ct && no && yr) {
             document.getElementById("case-preview").style.display = "block";
             document.getElementById("case-preview").innerHTML =
-                `Case: <b>${ct} / ${no} / ${yr}</b>`;
+                `Case: <b>${ctText} / ${no} / ${yr}</b>`;
         }
     }
     document.getElementById("case_type").addEventListener("change", updateCasePreview);
@@ -367,6 +374,7 @@
                 <div class="result-title">Case Found</div>
                 <p><b>Court Room:</b> ${data.court_no}</p>
                 <p><b>Item No:</b> ${data.item_no}</p>
+                <p><b>Cause List Type:</b> ${data.case_type_text}</p>
 
                 <label>Select Advocate</label>
                 <select id="adv_select">${advOptions}</select>
@@ -384,7 +392,7 @@
             });
     });
 
-   
+
 
 
     function submitPassData(encodedData, advName, advSide) {
@@ -437,26 +445,45 @@
 
     }
 
+    function isValidIndianMobile(mobile) {
+        if (!mobile) return false;
 
+        mobile = mobile.trim();
+
+        // 10 digits, starts with 6-9
+        if (!/^[6-9]\d{9}$/.test(mobile)) return false;
+
+        // reject same digit repeated (1111111111 etc.)
+        if (/^(\d)\1+$/.test(mobile)) return false;
+
+        return true;
+    }
+
+    function validateAndSubmit(encodedData, advName, advSide) {
+
+        let mobile = document.getElementById("partymob").value.trim();
+
+        if (!isValidIndianMobile(mobile)) {
+            alert("Please enter a valid Indian mobile number (10 digits, starting with 6-9).");
+            document.getElementById("partymob").focus();
+            return;
+        }
+
+        // ✅ valid → continue
+        submitPassData(encodedData, advName, advSide);
+    }
 
     function openPassForm(encodedData) {
-
         let data = JSON.parse(decodeURIComponent(encodedData));
         let selected = document.getElementById("adv_select").value;
-        // let [advName, advSide, advMobile, adv_code] = selected.split("||");
         let [advName, advSide, advMobile, adv_code] = selected.split("||");
-
-        // sanitize all fields
         advName = (advName && advName !== 'null' && advName !== 'undefined') ? advName : '';
         advSide = (advSide && advSide !== 'null' && advSide !== 'undefined') ? advSide : '';
         advMobile = (advMobile && advMobile !== 'null' && advMobile !== 'undefined') ? advMobile : '';
         adv_code = (adv_code && adv_code !== 'null' && adv_code !== 'undefined') ? adv_code : '';
-
         if (document.getElementById("adv_code")) {
             document.getElementById("adv_code").value = adv_code;
         }
-
-
         const form = `
         <div class="card form-container new-pass-box" style="margin-top:25px">
             <h3 class="pass-title">Generate Court Pass</h3>
@@ -464,12 +491,12 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label>Advocate Name</label>
-                    <input type="text" id="advname" value="${advName}" readonly>
+                    <input type="text" id="advname" value="${advName}">
                 </div>
 
                 <div class="form-group">
                     <label>Advocate Mobile</label>
-                    <input type="text" id="adv_mobile" value="${advMobile ? advMobile : ''}" readonly>
+                    <input type="text" id="partymob" maxlength="10"  oninput="this.value=this.value.replace(/[^0-9]/g,'')" value="${advMobile ? advMobile : ''}">
 
                 </div>
 
@@ -481,14 +508,15 @@
           
                 <input type="hidden" id="partyno" value="0">
                 <input type="hidden" id="partynm" value="">
-                <input type="hidden" id="partymob" value="">
+               
                 <input type="hidden" id="paddress" value="">
                 <input type="hidden" id="passfor" value="C">
                 <input type="hidden" id="adv_code" value="${adv_code}">
             </div>
 
             <button class="generate-btn-full"
-                onclick="submitPassData('${encodeURIComponent(JSON.stringify(data))}', '${advName}', '${advSide}')">
+                onclick="validateAndSubmit('${encodeURIComponent(JSON.stringify(data))}', '${advName}', '${advSide}')"
+>
                 Generate Pass
             </button>
         </div>

@@ -25,6 +25,9 @@ switch ($controller) {
         elseif ($action === 'logout') $c->logout();
         elseif ($action === 'findAdvDetails') $c->findByEnroll();
         elseif ($action === 'registerAdvocateAjax') $c->registerAdvocateAjax();
+        elseif ($action === 'registerPartyAjax') $c->registerPartyAjax();
+        elseif ($action === 'send') $c->sendOtp();
+
 
         else $c->loginForm();
         break;
@@ -90,8 +93,7 @@ switch ($controller) {
 
 
          
-
-
+      
 
 
         else $c->list();

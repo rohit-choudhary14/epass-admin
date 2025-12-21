@@ -396,4 +396,182 @@ class AuthController extends BaseController
             "message" => "Advocate registered successfully. Default password is hcgatepass@1234"
         ]);
     }
+    public function registerPartyAjax()
+    {
+        $this->requireRole([10]);
+        header('Content-Type: application/json');
+
+        $name   = trim($this->decodeField($_POST['party_name']) ?? '');
+        $mobile = trim($this->decodeField($_POST['mobile']) ?? '');
+        $email  = trim($this->decodeField($_POST['email'] )?? '');
+        $est    = trim($this->decodeField($_POST['estt']) ?? '');
+        $address  = trim($this->decodeField($_POST['address']) ?? '');
+        $password = 'Hcgatepass@123';
+        $passtype = 3;
+        $roleId   = 2; 
+        if ($name === '' || $mobile === '' || $email === '' || $address ==='') {
+            echo json_encode([
+                "status"  => "ERROR",
+                "message" => "All required fields must be filled",
+                "code"    => 400
+            ]);
+            return;
+        }
+        if (!in_array($est, ['P', 'B'], true)) {
+            echo json_encode([
+                "status"  => "ERROR",
+                "message" => "Invalid establishment selected",
+                "code"    => 400
+            ]);
+            return;
+        }
+        if (!preg_match('/^[6-9][0-9]{9}$/', $mobile)) {
+            echo json_encode([
+                "status"  => "ERROR",
+                "message" => "Invalid mobile number",
+                "code"    => 400
+            ]);
+            return;
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            echo json_encode([
+                "status"  => "ERROR",
+                "message" => "Invalid email address",
+                "code"    => 400
+            ]);
+            return;
+        }
+        if ($this->userModel->findPartyByMobile($mobile)) {
+            echo json_encode([
+                "status"  => "ERROR",
+                "message" => "Party already exists with this mobile number",
+                "code"    => 409
+            ]);
+            return;
+        }
+        $passwordHash = password_hash($password, PASSWORD_BCRYPT);
+        $ok = $this->userModel->createPartyUser(
+            $name,
+            $mobile,
+            $email,
+            $passwordHash,
+            $roleId,
+            $passtype,
+            $est,
+            $address
+        );
+
+        if ($ok) {
+            echo json_encode([
+                "status"  => "OK",
+                "message" => "Party registered successfully"
+            ]);
+        } else {
+            echo json_encode([
+                "status"  => "ERROR",
+                "message" => "Could not register party",
+                "code"    => 500
+            ]);
+        }
+    }
+
+
+
+
+    public function sendOtp()
+    {
+        session_start();
+        header('Content-Type: application/json');
+
+        $data = json_decode(file_get_contents("php://input"), true);
+        $mobile = trim($data['mobile'] ?? '');
+
+        // 🔒 Basic validation
+        if (!preg_match('/^[6-9]\d{9}$/', $mobile)) {
+            echo json_encode([
+                "status" => "ERROR",
+                "message" => "Invalid mobile number"
+            ]);
+            return;
+        }
+
+        // 🔥 Generate OTP
+        $varcode = rand(100001, 999999);
+
+        // 🔥 SMS CONFIG (AS-IS FROM YOUR ADVOCATE PORTAL)
+        $dlt_template_id = '1107160033837759671';
+        $message = "OTP for RHC GATE PASS is $varcode";
+        $message = urlencode($message);
+
+        $url = "https://smsgw.sms.gov.in/failsafe/HttpLink?"
+            . "username=courts-raj.sms"
+            . "&pin=A%25%5Eb3%24*z7"
+            . "&message=$message"
+            . "&mnumber=$mobile"
+            . "&signature=RCOURT"
+            . "&dlt_entity_id=1101333050000031038"
+            . "&dlt_template_id=$dlt_template_id";
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_exec($ch);
+        curl_close($ch);
+        $_SESSION['epass_otp'][$mobile] = [
+            'otp'       => $varcode,
+            'timestamp' => time()
+        ];
+
+        echo json_encode([
+            "status"  => "OK",
+            "message" => "OTP sent successfully"
+        ]);
+    }
+    public function verifyOtp()
+    {
+        session_start();
+        header('Content-Type: application/json');
+
+        $data = json_decode(file_get_contents("php://input"), true);
+        $mobile = trim($data['mobile'] ?? '');
+        $otp    = trim($data['otp'] ?? '');
+
+        if (
+            empty($mobile) ||
+            empty($otp) ||
+            !isset($_SESSION['epass_otp'][$mobile])
+        ) {
+            echo json_encode(["status" => "ERROR"]);
+            return;
+        }
+
+        $saved = $_SESSION['epass_otp'][$mobile];
+
+        // ⏱ OTP expiry (3 minutes)
+        if (time() - $saved['timestamp'] > 180) {
+            unset($_SESSION['epass_otp'][$mobile]);
+            echo json_encode([
+                "status"  => "ERROR",
+                "message" => "OTP expired"
+            ]);
+            return;
+        }
+
+        if ($otp != $saved['otp']) {
+            echo json_encode([
+                "status"  => "ERROR",
+                "message" => "Invalid OTP"
+            ]);
+            return;
+        }
+
+        // ✅ VERIFIED
+        $_SESSION['epass_otp'][$mobile]['verified'] = true;
+
+        echo json_encode([
+            "status" => "OK"
+        ]);
+    }
 }

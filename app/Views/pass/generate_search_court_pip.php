@@ -1,4 +1,5 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
+<?php include __DIR__ . '/../layouts/partyreg.php'; ?>
 
 <style>
     /* ⭐ your styles remain untouched ⭐ */
@@ -152,7 +153,7 @@
                 <select id="case_year" name="case_year" required></select>
             </div>
 
-            <div class="form-group">
+            <!-- <div class="form-group">
                 <label>Causelist Type</label>
                 <select name="cl_type" id="cl_type" required>
                     <option value="">-- Select Causelist Type --</option>
@@ -160,7 +161,7 @@
                     <option value="D">Daily</option>
                     <option value="W">Weekly</option>
                 </select>
-            </div>
+            </div> -->
 
             <div class="form-group">
                 <label>Causelist Date</label>
@@ -271,6 +272,7 @@
 
         <p><b>Court Room:</b> ${data.court_no}</p>
         <p><b>Item No:</b> ${data.item_no}</p>
+        <p><b>Cause List Type:</b> ${data.case_type_text}</p>
 
         <!-- Party-in-Person Declaration -->
         <div style="margin:15px 0; padding:12px; background:#fff; border-radius:8px;">
@@ -304,15 +306,24 @@
     function openPIPForm(encoded) {
 
         let data = JSON.parse(decodeURIComponent(encoded));
-
+        let advOptions = data.advocates.map(a => `
+    <option 
+                value="${a.name}"
+                data-side="${a.side}"
+                data-mobile="${a.mobile || ''}"
+                data-advcode="${a.adv_code || ''}"
+            >
+                ${a.name}
+            </option>
+        `).join("");
         document.getElementById("case-result").innerHTML = `
         <div class="new-pass-box">
             <h3 class="pass-title">Generate Party-in-Person Pass</h3>
 
-            <div class="form-group">
-                <label>Your Full Name</label>
-                <input type="text" id="pip_name" placeholder="Enter Full Name">
-            </div>
+           
+             <label>Select Party</label>
+                <select id="pip_name">${advOptions}</select>
+
 
             <div class="form-group">
                 <label>Mobile Number</label>
@@ -343,6 +354,7 @@
         let data = JSON.parse(decodeURIComponent(encoded));
 
         let name = document.getElementById("pip_name").value.trim();
+       
         let mobile = document.getElementById("pip_mobile").value.trim();
         let address = document.getElementById("pip_address").value.trim();
 
@@ -356,7 +368,7 @@
 
         fd.append("cino", safeEncode(data.cino));
         fd.append("cldt", safeEncode(data.cl_date));
-        fd.append("cltype", safeEncode(data.cl_type));
+        // fd.append("cltype", safeEncode(data.cl_type));
         fd.append("courtno", safeEncode(data.court_no));
         fd.append("itemno", safeEncode(data.item_no));
 
@@ -377,7 +389,10 @@
             .then(resp => {
 
                 hideLoader();
-
+                if (resp.status === "ERROR" && resp.code ==404) {
+                      showPartyRegisterForm(resp.message,name);
+                    return;
+                }
                 if (resp.status === "ERROR") {
                     return showError(resp.message);
                 }
