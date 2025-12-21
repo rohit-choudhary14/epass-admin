@@ -21,54 +21,79 @@ class Court extends BaseModel
 
 
 
+    private function getAdvocateFromMaster($advCode = null)
+    {
+        // Normalize
+        if (empty($advCode) || $advCode == 0) {
+            return null;
+        }
+
+        $sql = "
+        SELECT
+            adv_code,
+            adv_reg,
+            COALESCE(adv_full_name, adv_name) AS name,
+            adv_mobile,
+            adv_phone,
+            adv_phone1,
+            email,
+            address,
+            off_add
+        FROM advocate_t
+        WHERE adv_code = :adv_code
+         
+        LIMIT 1
+    ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(":adv_code", (int)$advCode, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row ?: null;
+    }
+
+
+
 
 
     public function findCourtCase($case_type, $case_no, $case_year, $cl_type, $cl_date)
     {
         $cl_date_db = date("dmY", strtotime($cl_date));
-
-        // if ($cl_type == 'S') {
-        //     $cltypeCondition = "B.causelisttype NOT IN ('D','W','L')";
-        // } else {
-        //     $cltypeCondition = "B.causelisttype = :cl_type";
-        // }
-
-        // Updated SQL: fetch full advocate details
         $sql = "
-    SELECT 
-        A.cino,
+            SELECT 
+                A.cino,
 
-        A.pet_adv,
-        A.pet_adv_cd,
-        A.pet_mobile,
-        A.pet_email,
+                A.pet_adv,
+                A.pet_adv_cd,
+                A.pet_mobile,
+                A.pet_email,
 
-        A.res_adv,
-        A.res_adv_cd,
-        A.res_mobile,
-        A.res_email,
+                A.res_adv,
+                A.res_adv_cd,
+                A.res_mobile,
+                A.res_email,
 
-        B.sno AS item_no,
-        B.croom AS court_no,
-        B.causelisttype
+                B.sno AS item_no,
+                B.croom AS court_no,
+                B.causelisttype
 
-    FROM civil_t A
-    INNER JOIN causelistsrno B 
-        ON (
-            (A.case_no = B.case_no AND B.con_case_no IS NULL)
-            OR
-            (A.case_no = B.con_case_no AND B.con_case_no IS NOT NULL)
-        )
-    WHERE 
-        A.regcase_type = :ct
-        AND A.reg_no = :no
-        AND A.reg_year = :yr
-        AND B.causelistdate = :dt
-        AND B.isfinalized = 'Y'
-    LIMIT 1
-";
-
-
+                FROM civil_t A
+                INNER JOIN causelistsrno B 
+                    ON (
+                        (A.case_no = B.case_no AND B.con_case_no IS NULL)
+                        OR
+                        (A.case_no = B.con_case_no AND B.con_case_no IS NOT NULL)
+                    )
+                WHERE 
+                    A.regcase_type = :ct
+                    AND A.reg_no = :no
+                    AND A.reg_year = :yr
+                    AND B.causelistdate = :dt
+                    AND B.isfinalized = 'Y'
+                LIMIT 1
+                ";
         $stmt = $this->pdo->prepare($sql);
 
         $params = [
@@ -77,10 +102,6 @@ class Court extends BaseModel
             ":yr" => $case_year,
             ":dt" => $cl_date_db
         ];
-        // if ($cl_type != 'S') {
-        //     $params[":cl_type"] = $cl_type;
-        // }
-
         $stmt->execute($params);
         $case = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -98,84 +119,126 @@ class Court extends BaseModel
         $caseTypeText   = $caseTypeMap[$dbCaseType] ?? 'Other';
         $cino = $case["cino"];
         $adv_list = [];
-
-        // Mapping for readable labels
         $sideLabel = [
             1 => "Petitioner",
             2 => "Respondent"
         ];
-
-        // PETITIONER ADVOCATE
         if (!empty(trim($case["pet_adv"]))) {
 
-            $adv_list[] = [
-                "name"        => trim($case["pet_adv"]),
-                "side"        => 1,
-                "side_label"  => $sideLabel[1],
+            $master = $this->getAdvocateFromMaster(
+                $case["pet_adv_cd"] ?? null,
+                $case["pet_adv_cd"] ?? null,
+                $case["pet_adv"]    ?? null
+            );
 
-                "adv_code"    => $case["pet_adv_cd"],
-                "enroll_num"  => $case["pet_adv_cd"],     // Same column used for enrollment
-                "mobile"      => $case["pet_mobile"],
-                "email"       => $case["pet_email"],
-                // "paddress"    => $case["pet_address"]
+            $adv_list[] = [
+                "name"        => $master["name"] ?? trim($case["pet_adv"]),
+                "side"        => 1,
+                "side_label"  => "Petitioner",
+
+                "adv_code"    => $master["adv_code"] ?? $case["pet_adv_cd"],
+                "enroll_num"  => $master["adv_reg"] ?? $case["pet_adv_cd"],
+
+                "mobile"      => $master["adv_mobile"] ?? null,
+                "phone"       => $master["adv_phone"] ?? null,
+                "email"       => $master["email"] ?? null,
+                "address"     => $master["address"] ?? null
             ];
         }
 
-        // RESPONDENT ADVOCATE
         if (!empty(trim($case["res_adv"]))) {
 
-            $adv_list[] = [
-                "name"        => trim($case["res_adv"]),
-                "side"        => 2,
-                "side_label"  => $sideLabel[2],
+            $master = $this->getAdvocateFromMaster(
+                $case["res_adv_cd"] ?? null,
+                $case["res_adv_cd"] ?? null,
+                $case["res_adv"] ?? null
+            );
 
-                "adv_code"    => $case["res_adv_cd"],
-                "enroll_num"  => $case["res_adv_cd"],
-                "mobile"      => $case["res_mobile"],
-                "email"       => $case["res_email"],
-                // "paddress"    => $case["res_address"]
+            $adv_list[] = [
+                "name"        => $master["name"] ?? trim($case["res_adv"]),
+                "side"        => 2,
+                "side_label"  => "Respondent",
+
+                "adv_code"    => $master["adv_code"] ?? $case["res_adv_cd"],
+                "enroll_num"  => $master["adv_reg"] ?? $case["res_adv_cd"],
+
+                "mobile"      => $master["adv_mobile"] ?? null,
+                "phone"       => $master["adv_phone"] ?? null,
+                "email"       => $master["email"] ?? null,
+                "address"     => $master["address"] ?? null
             ];
         }
 
-        // EXTRA ADVOCATES
-        $sql2 = "SELECT adv_name, type FROM extra_adv_t WHERE cino=:cino AND trim(adv_name) <> ''";
+        $sql2 = "SELECT adv_name, type FROM extra_adv_t 
+         WHERE cino = :cino AND trim(adv_name) <> ''";
+
         $stmt2 = $this->pdo->prepare($sql2);
         $stmt2->execute([":cino" => $cino]);
 
         foreach ($stmt2->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            if (!empty(trim($row["adv_name"]))) {
 
-                // No details exist for extra advocates in civil_t
-                $adv_list[] = [
-                    "name"       => trim($row["adv_name"]),
-                    "side"       => $row["type"],
-                    "side_label" => $sideLabel[$row["type"]],
-                    "mobile"     => null,
-                    "adv_code"   => null,
-                    "enroll_num" => null,
-                    "paddress"   => null
-                ];
+            $advName = trim($row["adv_name"]);
+            if ($advName === '') {
+                continue;
             }
+
+            // 🔍 Fetch from advocate master using NAME
+            $master = $this->getAdvocateFromMaster(null, null, $row["adv_name"]);
+
+
+            $adv_list[] = [
+                "name"        => $master["name"] ?? $advName,
+                "side"        => (int)$row["type"],
+                "side_label"  => $sideLabel[$row["type"]] ?? "Other",
+
+                "adv_code"    => $master["adv_code"] ?? null,
+                "enroll_num"  => $master["adv_reg"] ?? null,
+
+                "mobile"      => $master["adv_mobile"] ?? null,
+                "phone"       => $master["adv_phone"] ?? null,
+                "email"       => $master["email"] ?? null,
+                "paddress"    => $master["address"] ?? null
+            ];
         }
 
-        // ADDRESS ADVOCATES
-        $sql3 = "SELECT adv_name, type FROM civ_address_t WHERE cino=:cino AND display='Y' AND trim(adv_name) <> ''";
+
+        $sql3 = "SELECT adv_name, type 
+         FROM civ_address_t 
+         WHERE cino = :cino 
+           AND display = 'Y' 
+           AND trim(adv_name) <> ''";
+
         $stmt3 = $this->pdo->prepare($sql3);
         $stmt3->execute([":cino" => $cino]);
 
         foreach ($stmt3->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            if (!empty(trim($row["adv_name"]))) {
-                $adv_list[] = [
-                    "name"       => trim($row["adv_name"]),
-                    "side"       => $row["type"],
-                    "side_label" => $sideLabel[$row["type"]],
-                    "mobile"     => null,
-                    "adv_code"   => null,
-                    "enroll_num" => null,
-                    "paddress"   => null
-                ];
+
+            $advName = trim($row["adv_name"]);
+            if ($advName === '') {
+                continue;
             }
+            $master = $this->getAdvocateFromMaster(null, null, $advName);
+
+            $adv_list[] = [
+                "name"        => $master["name"] ?? $advName,
+                "side"        => (int)$row["type"],
+                "side_label"  => $sideLabel[$row["type"]] ?? "Other",
+
+                "adv_code"    => $master["adv_code"] ?? null,
+                "enroll_num"  => $master["adv_reg"] ?? null,
+
+                "mobile"      => $master["adv_mobile"] ?? null,
+                "phone"       => $master["adv_phone"] ?? null,
+                "email"       => $master["email"] ?? null,
+                "paddress"    => $master["address"] ?? null
+            ];
         }
+        $adv_list = array_values(
+            array_map(
+                "unserialize",
+                array_unique(array_map("serialize", $adv_list))
+            )
+        );
 
         return [
             "status"           => "OK",
@@ -183,7 +246,7 @@ class Court extends BaseModel
             "court_no"         => $case["court_no"],
             "item_no"          => $case["item_no"],
             "cl_date"          => $cl_date,
-            "case_type"        => $dbCaseType,      
+            "case_type"        => $dbCaseType,
             "case_type_text"   => $caseTypeText,
             "requested_type"   => $cl_type,
 

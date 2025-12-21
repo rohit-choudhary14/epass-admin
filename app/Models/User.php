@@ -122,9 +122,7 @@ class User extends BaseModel
         foreach ($rows as $row) {
 
             $decMob = $this->decryptData($row["contact_num"]);
-            print_r($row);
-            echo $decMob;
-            die();
+
             if ($decMob == trim($mobile)) {
 
                 return true;
@@ -132,13 +130,35 @@ class User extends BaseModel
         }
         return false;
     }
-    public function findPartyByMobile($mobile)
+    public function findPartyByMobile($mobileEnc)
     {
-        $sql = "SELECT id FROM gatepass_users WHERE contact_num = :mobile LIMIT 1";
+        if (!$mobileEnc) {
+            return false;
+        }
+       
+        $encMobile = trim(
+            $this->encryptData($mobileEnc));
+ 
+        $sql = "SELECT name, address
+            FROM gatepass_users
+            WHERE passtype = 3
+              AND role_id = 2
+              AND contact_num = :mobile
+            LIMIT 1";
+
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([':mobile' => $mobile]);
-        return $stmt->fetch();
+        $stmt->execute([
+            ":mobile" => $encMobile
+        ]);
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$row) {
+            return false;
+        }
+        return $row;
     }
+
     public function createPartyUser(
         $name,
         $mobile,

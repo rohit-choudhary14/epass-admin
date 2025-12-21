@@ -299,8 +299,6 @@ class PassController extends BaseController
     public function actionSearchCourtCase()
     {
         $this->requireRole([10]);
-
-        // Read POST
         $case_type  = $_POST['case_type'] ?? '';
         $case_no    = $_POST['case_no'] ?? '';
         $case_year  = $_POST['case_year'] ?? '';
@@ -309,10 +307,9 @@ class PassController extends BaseController
         $cldt = date("d-m-Y", strtotime($cl_date));
         $cl_dt = date("d-m-Y", strtotime($cl_date));
 
-        // Validate
         if (
             $case_type == '' || $case_no == '' || $case_year == '' ||
-             $cl_date == ''
+            $cl_date == ''
         ) {
             echo json_encode([
                 "status" => "ERROR",
@@ -320,10 +317,6 @@ class PassController extends BaseController
             ]);
             return;
         }
-
-        // ------------------------------
-        // BACKEND VALIDATION FOR CAUSELIST DATE
-        // ------------------------------
         $today = new DateTime();
         $today->setTime(0, 0);
 
@@ -350,18 +343,6 @@ class PassController extends BaseController
             ]);
             return;
         }
-
-
-
-
-
-
-
-
-
-
-
-
         require_once __DIR__ . '/../Models/Court.php';
         $court = new Court();
 
@@ -478,7 +459,7 @@ class PassController extends BaseController
         $cltype    = $this->decodeField($_POST["cltype"])   ?? '';
         $courtno   = $this->decodeField($_POST["courtno"])   ?? '';
         $itemno    = $this->decodeField($_POST["itemno"])    ?? '';
-        $party     = $this->decodeField($_POST["party"])    ?? '';
+        $party    = $this->decodeField($_POST['party']    ?? null);
         $passfor   = $this->decodeField($_POST["passfor"])  ?? '';
         $partyno   = $this->decodeField($_POST["partyno"])  ?? '';
         $partynm   = $this->decodeField($_POST["partynm"])  ?? '';
@@ -506,10 +487,7 @@ class PassController extends BaseController
             ]);
             return;
         }
-        // Generate pass no
         $pass_no = $cltype . date("dmY", strtotime($cldt)) . $courtno . $itemno . date("His");
-
-
         $paddress    = $advDetails['address']     ?? '';
         $adv_enroll  = $advDetails['enroll_num']  ?? null;
         $sql = "INSERT INTO gatepass_details
@@ -557,9 +535,9 @@ class PassController extends BaseController
         $cltype    = $this->decodeField($_POST["cltype"])   ?? '';
         $courtno   = $this->decodeField($_POST["courtno"])  ?? '';
         $itemno    = $this->decodeField($_POST["itemno"])    ?? '';
-        $party     = $this->decodeField($_POST["party"])    ?? '';
+        $party    = $this->decodeField($_POST['party']    ?? null);
         $passfor   = $this->decodeField($_POST["passfor"])   ?? '';
-        $partyno   = $this->decodeField($_POST["partyno"])   ?? '';
+        $partyno   = $this->decodeField($_POST["partyno"]   ?? null);
         $partynm   = $this->decodeField($_POST["lit_name"])  ?? '';
         $partymob  = $this->decodeField($_POST["lit_mobile"]) ?? '';
         $adv_code  = $this->decodeField($_POST["recommended_code"]) ?? '';
@@ -696,7 +674,7 @@ class PassController extends BaseController
 
         if (!$exists) {
             echo json_encode([
-                "code"=>404,
+                "code" => 404,
                 "status"  => "ERROR",
                 "message" => "Party not registered as Party-in-Person. Please register first."
             ]);
@@ -1159,7 +1137,7 @@ class PassController extends BaseController
         echo json_encode([
             "status"   => "OK",
             "message"  => "Section pass generated successfully.",
-            "redirect" => "/HC-EPASS-MVC/public/index.php?r=pass/viewSection&id=" . $ok
+            "redirect" => "/HC-EPASS-MVC/public/index.php?r=pass/viewSectionAdvocate&id=" . $ok
         ]);
     }
     public function actionSaveLitigantSection()
@@ -1297,6 +1275,7 @@ class PassController extends BaseController
         if (!$exists) {
 
             echo json_encode([
+                "code" => 404,
                 "status"  => "ERROR",
                 "message" => "Party not registered as Party-in-Person. Please register first."
             ]);
@@ -1748,7 +1727,36 @@ this ePass.
             $pdf->Output("SECTION_PASS_{$p['pass_no']}.pdf", 'D');
         }
     }
+
+
+    public function searchPasses()
+    {
+        $this->requireAuth();
+        $this->requireRole([10]); // officer / admin
+
+        $q = trim($_GET['q'] ?? '');
+
+        if ($q === '') {
+            $this->render('pass/search_result', [
+                'results' => [],
+                'query'   => '',
+                'error'   => 'Search value is required'
+            ]);
+            return;
+        }
+
+        $model = new Pass();
+        $results = $model->searchPasses($q);
+
+        $this->render('pass/search_result', [
+            'results' => $results,
+            'query'   => $q,
+            'error'   => empty($results) ? 'No records found' : null
+        ]);
+    }
 }
+
+
 
 
 

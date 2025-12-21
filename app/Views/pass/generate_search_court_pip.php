@@ -1,8 +1,8 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
 <?php include __DIR__ . '/../layouts/partyreg.php'; ?>
+<?php include __DIR__ . '/../layouts/OtpModel.php'; ?>
 
 <style>
-    /* ⭐ your styles remain untouched ⭐ */
     body {
         padding: 0;
         margin: 0;
@@ -68,10 +68,6 @@
         cursor: pointer;
         width: 100%;
         transition: background-color .3s;
-    }
-
-    button:hover {
-        background: #0056b3;
     }
 
     #case-result {
@@ -307,7 +303,7 @@
 
         let data = JSON.parse(decodeURIComponent(encoded));
         let advOptions = data.advocates.map(a => `
-    <option 
+                <option 
                 value="${a.name}"
                 data-side="${a.side}"
                 data-mobile="${a.mobile || ''}"
@@ -320,10 +316,10 @@
         <div class="new-pass-box">
             <h3 class="pass-title">Generate Party-in-Person Pass</h3>
 
-           
+            <div class="form-group">
              <label>Select Party</label>
                 <select id="pip_name">${advOptions}</select>
-
+            </div>
 
             <div class="form-group">
                 <label>Mobile Number</label>
@@ -334,6 +330,10 @@
                 <label>Full Address</label>
                 <input type="text" id="pip_address" placeholder="Enter Full Address">
             </div>
+             <div class="form-group">
+               
+                 <input type="hidden" id="cl_type" value="${data.case_type}" >
+            </div>
 
             <button class="generate-btn-full"
                 onclick="submitPIP('${encodeURIComponent(JSON.stringify(data))}')">
@@ -343,41 +343,11 @@
     `;
     }
 
-    /* ---------------------- VALID MOBILE ---------------------- */
     function isValidMobile(mob) {
         return /^[6-9][0-9]{9}$/.test(mob);
     }
 
-    /* ---------------------- SUBMIT PIP PASS ---------------------- */
-    function submitPIP(encoded) {
-
-        let data = JSON.parse(decodeURIComponent(encoded));
-
-        let name = document.getElementById("pip_name").value.trim();
-       
-        let mobile = document.getElementById("pip_mobile").value.trim();
-        let address = document.getElementById("pip_address").value.trim();
-
-        // VALIDATION
-        if (name === "") return showError("Name cannot be empty.");
-        if (!isValidMobile(mobile)) return showError("Enter a valid Indian mobile number.");
-        if (address === "") return showError("Address cannot be empty.");
-
-        // Prepare encrypted FormData
-        let fd = new FormData();
-
-        fd.append("cino", safeEncode(data.cino));
-        fd.append("cldt", safeEncode(data.cl_date));
-        // fd.append("cltype", safeEncode(data.cl_type));
-        fd.append("courtno", safeEncode(data.court_no));
-        fd.append("itemno", safeEncode(data.item_no));
-
-        fd.append("partynm", safeEncode(name));
-        fd.append("partymob", safeEncode(mobile));
-        fd.append("paddress", safeEncode(address));
-
-        fd.append("partyno", safeEncode("0"));
-        fd.append("passfor", safeEncode("P")); // PIP type
+    function submitPIPAfterOtp(fd, name) {
 
         showLoader();
 
@@ -389,15 +359,20 @@
             .then(resp => {
 
                 hideLoader();
-                if (resp.status === "ERROR" && resp.code ==404) {
-                      showPartyRegisterForm(resp.message,name);
+
+                if (resp.status === "ERROR" && resp.code == 404) {
+                    showPartyRegisterForm(resp.message, name);
                     return;
                 }
+
                 if (resp.status === "ERROR") {
-                    return showError(resp.message);
+                    showError(resp.message || "Unable to generate PIP pass");
+                    return;
                 }
 
-                showSuccess("PIP Pass Generated Successfully!<br>PASS NO: <b>" + resp.pass_no + "</b>");
+                showSuccess(
+                    "PIP Pass Generated Successfully!<br>PASS NO: <b>" + resp.pass_no + "</b>"
+                );
 
                 setTimeout(() => {
                     window.location.reload();
@@ -407,6 +382,51 @@
                 hideLoader();
                 showError("Something went wrong! Please try again.");
             });
+    }
+
+    function submitPIP(encoded) {
+
+        let data = JSON.parse(decodeURIComponent(encoded));
+
+        let name = document.getElementById("pip_name").value.trim();
+        let mobile = document.getElementById("pip_mobile").value.trim();
+        let address = document.getElementById("pip_address").value.trim();
+
+        // VALIDATION
+        if (name === "") return showError("Name cannot be empty.");
+        if (!isValidMobile(mobile))
+            return showError("Enter a valid Indian mobile number.");
+        if (address === "") return showError("Address cannot be empty.");
+
+        // Prepare encrypted FormData
+        let fd = new FormData();
+
+        fd.append("cino", safeEncode(data.cino));
+        fd.append("cldt", safeEncode(data.cl_date));
+        fd.append("courtno", safeEncode(data.court_no));
+        fd.append("itemno", safeEncode(data.item_no));
+
+        fd.append("partynm", safeEncode(name));
+        fd.append("partymob", safeEncode(mobile));
+        fd.append("paddress", safeEncode(address));
+
+        fd.append("partyno", safeEncode("0"));
+        fd.append("passfor", safeEncode("P")); 
+        fd.append("cltype", safeEncode(data.case_type));
+
+        // 🔥 OTP FLOW STARTS HERE 🔥
+        initOtpFlow({
+            mobile: mobile, // OTP goes to PIP mobile
+            purpose: "PIP_PASS",
+            role: "PIP",
+            payload: {
+                fd,
+                name
+            }, // name needed for error handling
+            onSuccess: function(payload) {
+                submitPIPAfterOtp(payload.fd, payload.name);
+            }
+        });
     }
 </script>
 <script>

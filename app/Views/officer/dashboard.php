@@ -148,6 +148,71 @@
             padding: 20px;
         }
     }
+
+    .search-box {
+        max-width: 600px;
+        margin: 30px auto;
+        padding: 22px;
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+        font-family: "Inter", sans-serif;
+    }
+
+    .search-box h3 {
+        margin-bottom: 16px;
+        font-size: 20px;
+        font-weight: 700;
+        color: #1e293b;
+        text-align: center;
+    }
+
+    .search-input-wrap {
+        display: flex;
+        gap: 10px;
+    }
+
+    .search-input-wrap input {
+        flex: 1;
+        padding: 14px 16px;
+        font-size: 15px;
+        border-radius: 10px;
+        border: 1px solid #d1d5db;
+        outline: none;
+    }
+
+    .search-input-wrap input:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+
+    .search-input-wrap button {
+        padding: 14px 22px;
+        background: #2563eb;
+        color: #ffffff;
+        border: none;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .search-input-wrap button:hover {
+        background: #1e40af;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 480px) {
+        .search-input-wrap {
+            flex-direction: column;
+        }
+
+        .search-input-wrap button {
+            width: 100%;
+        }
+    }
 </style>
 
 
@@ -184,28 +249,30 @@
             <h3>Party In Person</h3>
             <p>Generate pass for Party in person</p>
         </div>
-         <!-- <div class="dashboard-card" onclick="window.location.href='/HC-EPASS-MVC/public/index.php?r=pass/generate&type=partyinperson';">
+        <!-- <div class="dashboard-card" onclick="window.location.href='/HC-EPASS-MVC/public/index.php?r=pass/generate&type=partyinperson';">
             <h3>Vendor Pass</h3>
             <p>Generate pass for Vendor</p>
         </div> -->
     </div>
 
     <!-- SEARCH BLOCK -->
-    <!-- <div class="search-box">
+    <div class="search-box">
         <h3>Search Generated Passes</h3>
-        <form method="get" action="/HC-EPASS-MVC/public/index.php">
-            <input type="hidden" name="r" value="pass/searchOfficer">
-            <input type="text" name="q" placeholder="Search by Pass No / Name / CINO..." required>
-            <button class="search-btn" type="submit">Search</button>
-        </form>
-    </div> -->
 
-    <!-- PROFILE INFO -->
-    <div class="profile-box">
-        <p><b>User:</b> <?= htmlspecialchars($_SESSION['admin_user']['name'] ?? 'N/A') ?></p>
-        <p><b>Role:</b> <?= htmlspecialchars($_SESSION['admin_user']['role'] ?? 'N/A') ?></p>
-        <p><b>Department:</b> <?= htmlspecialchars($_SESSION['admin_user']['department'] ?? 'N/A') ?></p>
+        <form method="get" action="/HC-EPASS-MVC/public/index.php" class="search-form">
+            <input type="hidden" name="r" value="pass/searchPassess">
+
+            <div class="search-input-wrap">
+                <input type="text"
+                    name="q"
+                    placeholder="Enter Pass No / Name / CINO"
+                    required>
+
+                <button type="submit">Search</button>
+            </div>
+        </form>
     </div>
+
 
 </div>
 

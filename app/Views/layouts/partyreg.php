@@ -7,43 +7,7 @@
         return /^[6-9][0-9]{9}$/.test(mobile);
     }
 
-    function registerParty() {
-        const name = document.getElementById("party_name").value.trim();
-        const mobile = document.getElementById("party_mobile").value.trim();
-        const email = document.getElementById("party_email").value.trim();
-        const address = document.getElementById("address").value.trim();
-
-        const est = document.querySelector(
-            "#partyRegisterForm input[name='establishment']:checked"
-        )?.value;
-        if (!name || !mobile || !email || !est || !address) {
-            showError("Please fill all required fields");
-            return;
-        }
-        if (!isValidMobile(mobile)) {
-            showError("Enter valid 10 digit mobile number");
-            return;
-        }
-        if (!isValidEmail(email)) {
-            showError("Please enter valid email address");
-            return;
-        }
-        const ok = confirm(
-            `Confirm Party Registration?\n\n` +
-            `Name: ${name}\n` +
-            `Mobile: ${mobile}\n` +
-            `Email: ${email}\n` +
-            `Establishment: ${est}`
-        );
-
-        if (!ok) return;
-
-        let fd = new FormData();
-        fd.append("party_name", safeEncode(name));
-        fd.append("mobile", safeEncode(mobile));
-        fd.append("email", safeEncode(email));
-        fd.append("estt", safeEncode(est));
-        fd.append("address", safeEncode(address));
+    function registerPartyAfterOtp(fd) {
 
         showLoader();
 
@@ -68,6 +32,64 @@
                 showError("Server error");
             });
     }
+
+    function registerParty() {
+
+        const name = document.getElementById("party_name").value.trim();
+        const mobile = document.getElementById("party_mobile").value.trim();
+        const email = document.getElementById("party_email").value.trim();
+        const address = document.getElementById("address").value.trim();
+
+        const est = document.querySelector(
+            "#partyRegisterForm input[name='establishment']:checked"
+        )?.value;
+
+        // VALIDATIONS
+        if (!name || !mobile || !email || !est || !address) {
+            showError("Please fill all required fields");
+            return;
+        }
+
+        if (!isValidMobile(mobile)) {
+            showError("Enter valid 10 digit mobile number");
+            return;
+        }
+
+        if (!isValidEmail(email)) {
+            showError("Please enter valid email address");
+            return;
+        }
+
+        const ok = confirm(
+            `Confirm Party Registration?\n\n` +
+            `Name: ${name}\n` +
+            `Mobile: ${mobile}\n` +
+            `Email: ${email}\n` +
+            `Establishment: ${est}`
+        );
+
+        if (!ok) return;
+
+        // 🔐 PREPARE FORM DATA (ONCE)
+        let fd = new FormData();
+        fd.append("party_name", safeEncode(name));
+        fd.append("mobile", safeEncode(mobile));
+        fd.append("email", safeEncode(email));
+        fd.append("estt", safeEncode(est));
+        fd.append("address", safeEncode(address));
+
+        // 🔥 OTP FLOW STARTS HERE 🔥
+        initOtpFlow({
+            mobile: mobile, // OTP goes to party mobile
+            purpose: "PARTY_REGISTRATION",
+            role: "PARTY",
+            payload: fd,
+            onSuccess: function(payload) {
+                registerPartyAfterOtp(payload);
+            }
+        });
+    }
+
 
     function showPartyRegisterForm(message, partyName) {
 
@@ -99,7 +121,7 @@
                 <div class="form-group" style="margin-bottom:15px">
                     <label class="form-label">* Party Name</label>
                     <input type="text" id="party_name" class="form-control"
-                           placeholder="Enter party name" value="${partyName}">
+                           placeholder="Enter party name" value="${partyName ?? ''}">
                 </div>
 
                 <div class="form-group" style="margin-bottom:15px">
@@ -115,8 +137,7 @@
                 </div>
                 <div class="form-group">
                             <label>Address *</label>
-                            <textarea id="address">
-                </textarea>
+                            <textarea id="address"></textarea>
                 </div>
                 <div class="form-group" style="margin-bottom:20px">
                     <label class="form-label">* Establishment</label>

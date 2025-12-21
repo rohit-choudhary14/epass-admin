@@ -92,7 +92,7 @@
         .dropdown-content {
             display: none;
             position: absolute;
-            background-color: #1f2937;
+            background-color: #ffffffff;
             min-width: 180px;
             border-radius: 6px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
@@ -100,15 +100,13 @@
         }
 
         .dropdown-content a {
-            color: #fff;
+            color: #000000ff;
             padding: 10px 15px;
             display: block;
             text-decoration: none;
         }
 
-        .dropdown-content a:hover {
-            background-color: #374151;
-        }
+
 
         .dropdown:hover .dropdown-content {
             display: block;
@@ -171,20 +169,35 @@
 
             <?php elseif ($_SESSION['admin_user']['role_id'] == 10): ?>
                 <!-- OFFICER MENU -->
-                <a href="/HC-EPASS-MVC/public/index.php?r=officer/dashboard">Dashboard</a>
+                <a href="/HC-EPASS-MVC/public/index.php?r=officer/dashboard">Home</a>
 
                 <!-- DROPDOWN: MY PASSES -->
                 <div class="dropdown">
                     <button class="dropbtn">Generated Passes ▾</button>
                     <div class="dropdown-content">
-                        <a href="/HC-EPASS-MVC/public/index.php?r=pass/mySectionPasses">Section Visit Passes</a>
+                        <a href="/HC-EPASS-MVC/public/index.php?r=pass/mySectionPasses">Section Passes</a>
                         <a href="/HC-EPASS-MVC/public/index.php?r=pass/myPasses">Court Passes</a>
 
                     </div>
                 </div>
                 <a href="javascript:void(0)" id="openEstModal">Change Establishment</a>
 
-                <a href="/HC-EPASS-MVC/public/index.php?r=auth/logout">Logout</a>
+
+                <div style="margin-left:auto;">
+                    <div class="dropdown">
+                        <button class="dropbtn">
+                            <?= htmlspecialchars($_SESSION['admin_user']['name'] ?? 'N/A') ?> ▾
+                        </button>
+
+                        <div class="dropdown-content">
+                            <a href="/HC-EPASS-MVC/public/index.php?r=auth/logout">Logout</a>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                </div>
             <?php endif; ?>
 
         <?php else: ?>

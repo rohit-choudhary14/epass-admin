@@ -4,16 +4,28 @@ return [
 
     'default_establishment' => 'jaipur',
 
+    // 'dbs' => [
+    //     'P' => [
+    //         'dsn'  => 'pgsql:host=10.130.8.95;port=5432;dbname=jaipur',
+    //         'user' => 'postgres',
+    //         'pass' => '1',
+    //     ],
+    //     'B' => [
+    //         'dsn'  => 'pgsql:host=10.130.8.95;port=5432;dbname=jaipur_new',
+    //         'user' => 'postgres',
+    //         'pass' => '1',
+    //     ],
+    // ],
     'dbs' => [
         'P' => [
-            'dsn'  => 'pgsql:host=10.130.8.95;port=5432;dbname=jaipur',
+            'dsn'  => 'pgsql:host=localhost;port=5433;dbname=jaipur',
             'user' => 'postgres',
-            'pass' => '1',
+            'pass' => '1234',
         ],
         'B' => [
-            'dsn'  => 'pgsql:host=10.130.8.95;port=5432;dbname=jaipur_new',
+            'dsn'  => 'pgsql:host=localhost;port=5433;dbname=jaipur_new',
             'user' => 'postgres',
-            'pass' => '1',
+            'pass' => '1234',
         ],
     ],
 

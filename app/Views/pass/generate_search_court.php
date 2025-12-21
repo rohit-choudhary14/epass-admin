@@ -1,5 +1,6 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
 <?php include __DIR__ . '/../layouts/advreg.php'; ?>
+<?php include __DIR__ . '/../layouts/OtpModel.php'; ?>
 
 <style>
     body {
@@ -70,11 +71,6 @@
         width: 100%;
         transition: background-color 0.3s;
     }
-
-    button:hover {
-        background-color: #0056b3;
-    }
-
     button:focus {
         outline: none;
     }
@@ -195,9 +191,10 @@
                     <select id="case_year" name="case_year" required></select>
 
                 </div>
-
+               
                 <!-- <div class="form-group">
                     <label for="cl_type">Causelist Type</label>
+                    <input type='hidden' id="cl_type" required>
                     <select name="cl_type" id="cl_type" required>
                         <option value="">-- Select Causelist Type --</option>
                         <option value="S">Supplementary</option>
@@ -243,9 +240,6 @@
 </div>
 
 <script>
-    // -------------------------------
-    // CASE YEAR DROPDOWN
-    // -------------------------------
     function loadCaseYears() {
         const yearSelect = document.getElementById("case_year");
         const currentYear = new Date().getFullYear();
@@ -258,28 +252,18 @@
         }
     }
     loadCaseYears();
-
-    // -------------------------------
-    // CASE NUMBER VALIDATION
-    // -------------------------------
     function validateCaseNo(input) {
         input.value = input.value.replace(/[^0-9]/g, '').slice(0, 20);
     }
-
-    // -------------------------------
-    // DISABLE WEEKENDS IN DATE PICKER
-    // -------------------------------
     document.getElementById("cl_date").addEventListener("change", function() {
         let d = new Date(this.value);
         let day = d.getDay();
-
         if (day === 0 || day === 6) {
             alert("Weekends are not allowed for Causelist Date.");
             this.value = "";
             return;
         }
     });
-
     function setCauselistMaxDate() {
         let maxDate = new Date();
         maxDate.setDate(maxDate.getDate() + 3);
@@ -298,10 +282,6 @@
     // }
 
     setCauselistMaxDate();
-
-    // -------------------------------
-    // AUTO CASE PREVIEW (CW / 1234 / 2025)
-    // -------------------------------
     function updateCasePreview() {
         let ct = document.getElementById("case_type").value;
 
@@ -355,8 +335,6 @@
                 let box = document.getElementById("case-result");
 
                 if (data.status === "OK") {
-
-                    // Show Case Title (Petitioner vs Respondent)
                     if (data.pet_name && data.res_name) {
                         document.getElementById("case-title").style.display = "block";
                         document.getElementById("case-title").innerHTML =
@@ -399,7 +377,6 @@
 
         let data = JSON.parse(decodeURIComponent(encodedData));
         let fd = new FormData();
-
         // Encrypt everything before sending
         fd.append("cino", safeEncode(data.cino));
         fd.append("adv_type", safeEncode(advSide));
@@ -407,7 +384,7 @@
         fd.append("courtno", safeEncode(data.court_no));
         fd.append("itemno", safeEncode(data.item_no));
         fd.append("cldt", safeEncode(data.cl_date));
-        // fd.append("cltype", safeEncode(data.cl_type));
+        fd.append("cltype", safeEncode(data.case_type));
         fd.append("paddress", safeEncode(document.getElementById("paddress").value));
         fd.append("partyno", safeEncode(document.getElementById("partyno").value));
         fd.append("partynm", safeEncode(document.getElementById("partynm").value));
@@ -468,9 +445,20 @@
             document.getElementById("partymob").focus();
             return;
         }
-
-        // ✅ valid → continue
-        submitPassData(encodedData, advName, advSide);
+        initOtpFlow({
+            mobile: document.getElementById("partymob").value,
+            purpose: "COURT_PASS",
+            role: "PARTY",
+            payload: {
+                encodedData,
+                advName,
+                advSide
+            },
+            onSuccess: (p) => {
+                submitPassData(p.encodedData, p.advName, p.advSide);
+            }
+        });
+       
     }
 
     function openPassForm(encodedData) {
@@ -512,6 +500,8 @@
                 <input type="hidden" id="paddress" value="">
                 <input type="hidden" id="passfor" value="C">
                 <input type="hidden" id="adv_code" value="${adv_code}">
+                 <input type="hidden" id="cl_type" value="${data.case_type}" >
+
             </div>
 
             <button class="generate-btn-full"

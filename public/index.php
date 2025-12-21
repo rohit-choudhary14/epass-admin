@@ -26,7 +26,9 @@ switch ($controller) {
         elseif ($action === 'findAdvDetails') $c->findByEnroll();
         elseif ($action === 'registerAdvocateAjax') $c->registerAdvocateAjax();
         elseif ($action === 'registerPartyAjax') $c->registerPartyAjax();
+        elseif ($action === 'findPartyByMobile') $c->findPartyByMobile();
         elseif ($action === 'send') $c->sendOtp();
+        elseif ($action === 'verify') $c->verifyOtp();
 
 
         else $c->loginForm();
@@ -90,18 +92,9 @@ switch ($controller) {
         elseif ($action === 'viewSectionAdvocate') $c->viewSection();
         elseif ($action === 'viewSectionLitigant') $c->viewSection();
         elseif ($action === 'viewSectionParty') $c->viewSection();
-
-
-         
-      
-
-
+        elseif ($action === 'searchPassess') $c->searchPasses();
         else $c->list();
         break;
-
-
-
-
     /* ===============================
        DEFAULT
        =============================== */

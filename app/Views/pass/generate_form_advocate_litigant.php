@@ -1,5 +1,6 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
 <?php include __DIR__ . '/../layouts/advreg.php'; ?>
+<?php include __DIR__ . '/../layouts/OtpModel.php'; ?>
 
 <style>
     /* WRAPPER */
@@ -237,9 +238,6 @@
         transition: background-color 0.3s;
     }
 
-    button:hover {
-        background-color: #0056b3;
-    }
 
     button:focus {
         outline: none;
@@ -395,22 +393,18 @@
 
         </form>
 
- <div id="case-result"></div>
+        <div id="case-result"></div>
     </div>
 
 </div>
 
 <script>
     $(document).ready(function() {
-
-        // INIT SELECT2
         $('#sections').select2({
             placeholder: "Select Sections",
             allowClear: true,
             closeOnSelect: false
         });
-
-        // CREATE purpose inputs dynamically
         $('#sections').on('change', function() {
             let selectedIds = $(this).val();
             let wrapper = $("#purpose-wrapper");
@@ -428,9 +422,6 @@
             `);
             });
         });
-
-
-
     });
 </script>
 
@@ -444,6 +435,48 @@
         if (/^(\d)\1+$/.test(m)) return false; // cannot be all same digits
         return true;
     }
+
+    function submitLitigantSectionAfterOtp(fd) {
+
+        showLoader();
+
+        $.ajax({
+            url: "/HC-EPASS-MVC/public/index.php?r=pass/saveLitigantSection",
+            type: "POST",
+            data: fd,
+            processData: false,
+            contentType: false,
+            dataType: "json",
+
+            success: function(res) {
+                hideLoader();
+
+                if (res.status === "ERROR" && res.code === 404) {
+                    showAdvocateRegisterForm(res.message);
+                    return;
+                }
+
+                if (res.status === "ERROR") {
+                    showError(res.message || "Something went wrong.");
+                    return;
+                }
+
+                showSuccess("Pass Generated Successfully! Redirecting...");
+
+                setTimeout(() => {
+                    window.location.href = res.redirect;
+                }, 1500);
+            },
+
+            error: function(xhr) {
+                hideLoader();
+                showError(
+                    "Server Error: " + (xhr.responseText || "Unable to connect")
+                );
+            }
+        });
+    }
+
     $(document).ready(function() {
 
         $("#sectionPassForm").on("submit", function(e) {
@@ -476,7 +509,7 @@
 
             for (let id of sections) {
                 let purpose = $(`input[name='purpose[${id}]']`).val()?.trim();
-                if (!purpose || purpose === "") {
+                if (!purpose) {
                     showError("Purpose missing for selected section.");
                     return;
                 }
@@ -491,60 +524,27 @@
             fd.append("lit_mobile", safeEncode(litMobile));
             fd.append("lit_address", safeEncode(litAddress));
 
-            // --- SECTIONS ENCRYPT --- //
-            let encryptedSections = safeEncode(JSON.stringify(sections));
-            fd.append("sections", encryptedSections);
+            // SECTIONS
+            fd.append("sections", safeEncode(JSON.stringify(sections)));
 
-            // --- PURPOSE ENCRYPT --- //
+            // PURPOSES
             let purposes = {};
             sections.forEach(id => {
                 purposes[id] = $(`input[name='purpose[${id}]']`).val().trim();
             });
+            fd.append("purpose", safeEncode(JSON.stringify(purposes)));
 
-            // Encode full JSON of purposes
-            let encryptedPurposes = safeEncode(JSON.stringify(purposes));
-            fd.append("purpose", encryptedPurposes);
-
-            showLoader();
-
-            $.ajax({
-                url: "/HC-EPASS-MVC/public/index.php?r=pass/saveLitigantSection",
-                type: "POST",
-                data: fd,
-                processData: false,
-                contentType: false,
-                dataType: "json",
-
-                success: function(res) {
-                    hideLoader();
-
-
-                    if (res.status === "ERROR" && res.code === 404) {
-                        showAdvocateRegisterForm(res.message);
-                        return;
-                    }
-                    if (res.status === "ERROR") {
-                        showError(res.message || "Something went wrong.");
-                        return;
-                    }
-                   
-
-                    showSuccess("Pass Generated Successfully! Redirecting...");
-
-                    setTimeout(() => {
-                        window.location.href = res.redirect;
-                    }, 1500);
-                },
-
-                error: function(xhr) {
-                    hideLoader();
-                    showError("Server Error: " + (xhr.responseText || "Unable to connect"));
+            // 🔥 OTP FLOW STARTS HERE 🔥
+            initOtpFlow({
+                mobile: litMobile, // OTP goes to litigant mobile
+                purpose: "LITIGANT_SECTION_PASS",
+                role: "LITIGANT",
+                payload: fd,
+                onSuccess: function(payload) {
+                    submitLitigantSectionAfterOtp(payload);
                 }
             });
         });
-
-
-
 
     });
 </script>

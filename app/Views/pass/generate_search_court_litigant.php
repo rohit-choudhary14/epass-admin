@@ -1,8 +1,8 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
 <?php include __DIR__ . '/../layouts/advreg.php'; ?>
+<?php include __DIR__ . '/../layouts/OtpModel.php'; ?>
 
 <style>
-    /* ⭐ your styles remain untouched ⭐ */
     body {
         padding: 0;
         margin: 0;
@@ -70,9 +70,7 @@
         transition: background-color .3s;
     }
 
-    button:hover {
-        background: #0056b3;
-    }
+
 
     #case-result {
         margin-top: 25px;
@@ -134,8 +132,6 @@
         font-family: "Inter", sans-serif;
     }
 
-
-
     .form-container {
         max-width: 900px;
         margin: 20px auto;
@@ -191,9 +187,7 @@
         transition: background-color 0.3s;
     }
 
-    button:hover {
-        background-color: #0056b3;
-    }
+
 
     button:focus {
         outline: none;
@@ -311,16 +305,6 @@
                 <select id="case_year" name="case_year" required></select>
             </div>
 
-            <!-- <div class="form-group">
-                <label>Causelist Type</label>
-                <select name="cl_type" id="cl_type" required>
-                    <option value="">-- Select Causelist Type --</option>
-                    <option value="S">Supplementary</option>
-                    <option value="D">Daily</option>
-                    <option value="W">Weekly</option>
-                </select>
-            </div> -->
-
             <div class="form-group">
                 <label>Causelist Date</label>
                 <input type="date" id="cl_date" name="cl_date" required>
@@ -419,13 +403,13 @@
         `;
         } else {
             // If both side advocates exist
-        //     partySelectHTML = `
-        //     <label>Select Party (Litigant)</label>
-        //     <select id="party_side">
-        //         <option value="1">Petitioner</option>
-        //         <option value="2">Respondent</option>
-        //     </select>
-        // `;
+            //     partySelectHTML = `
+            //     <label>Select Party (Litigant)</label>
+            //     <select id="party_side">
+            //         <option value="1">Petitioner</option>
+            //         <option value="2">Respondent</option>
+            //     </select>
+            // `;
         }
 
         box.style.display = "block";
@@ -449,10 +433,6 @@
         </button>
     `;
     }
-
-
-
-
     /* ---------------------- SHOW LITIGANT FINAL FORM ---------------------- */
     function openLitigantForm(encoded) {
 
@@ -505,6 +485,7 @@
             <input type="hidden" id="passfor" value="L">
             <input type="hidden" id="adv_code" value="${recommendedCode}">
             <input type="hidden" id="party_side" value="${side}">
+            <input type="hidden" id="cl_type" value="${data.case_type}" >
 
             <button class="generate-btn-full"
                 onclick="submitLitigant(
@@ -533,51 +514,7 @@
         return true;
     }
 
-    /* ---------------------- SUBMIT LITIGANT PASS ---------------------- */
-    function submitLitigant(encoded, side, recAdvName, recAdvCode) {
-
-        let data = JSON.parse(decodeURIComponent(encoded));
-
-        let name = document.getElementById("lit_name").value.trim();
-        let mobile = document.getElementById("lit_mobile").value.trim();
-        let address = document.getElementById("lit_address").value.trim();
-        let party_side = document.getElementById("party_side").value.trim();
-
-        // VALIDATIONS
-        if (name === "") {
-            showError("Litigant name cannot be empty.");
-            return;
-        }
-
-        if (!isValidMobile(mobile)) {
-            showError("Enter a valid 10-digit mobile number starting with 6–9.");
-            return;
-        }
-
-        if (address === "") {
-            showError("Litigant address cannot be empty.");
-            return;
-        }
-
-        let fd = new FormData();
-
-        // 🔐 ENCRYPT ALL FIELDS BEFORE SENDING
-        fd.append("cino", safeEncode(data.cino));
-        fd.append("lit_name", safeEncode(name));
-        fd.append("lit_mobile", safeEncode(mobile));
-        fd.append("lit_address", safeEncode(address));
-        fd.append("passfor", safeEncode('L'));
-
-        fd.append("recommended_by", safeEncode(recAdvName));
-        fd.append("recommended_code", safeEncode(recAdvCode));
-
-        fd.append("adv_type", safeEncode(party_side));
-
-        // Case info
-        fd.append("courtno", safeEncode(data.court_no));
-        fd.append("itemno", safeEncode(data.item_no));
-        fd.append("cldt", safeEncode(data.cl_date));
-        // fd.append("cltype", safeEncode(data.cl_type));
+    function submitLitigantAfterOtp(fd) {
 
         showLoader();
 
@@ -594,20 +531,19 @@
                     showAdvocateRegisterForm(resp.message);
                     return;
                 }
+
                 if (resp.status === "ERROR") {
                     showError(resp.message || "Something went wrong.");
                     return;
                 }
 
-                // if (resp.status === "ERROR") {
-                //     showError(resp.message || "Unable to generate litigant pass.");
-                //     return;
-                // }
-
-                showSuccess("Litigant Pass Generated! <br> PASS NO: <b>" + resp.pass_no + "</b>");
+                showSuccess(
+                    "Litigant Pass Generated! <br> PASS NO: <b>" + resp.pass_no + "</b>"
+                );
 
                 setTimeout(() => {
-                    window.location.href = "/HC-EPASS-MVC/public/index.php?r=pass/myPasses";
+                    window.location.href =
+                        "/HC-EPASS-MVC/public/index.php?r=pass/myPasses";
                 }, 1500);
             })
             .catch(err => {
@@ -615,6 +551,55 @@
                 console.error("Fetch Error:", err);
                 showError("Server error! Please try again later.");
             });
+    }
+
+    /* ---------------------- SUBMIT LITIGANT PASS ---------------------- */
+    function submitLitigant(encoded, side, recAdvName, recAdvCode) {
+
+        let data = JSON.parse(decodeURIComponent(encoded));
+
+        let name = document.getElementById("lit_name").value.trim();
+        let mobile = document.getElementById("lit_mobile").value.trim();
+        let address = document.getElementById("lit_address").value.trim();
+        let party_side = document.getElementById("party_side").value.trim();
+        if (name === "") {
+            showError("Litigant name cannot be empty.");
+            return;
+        }
+
+        if (!isValidMobile(mobile)) {
+            showError("Enter a valid 10-digit mobile number starting with 6–9.");
+            return;
+        }
+        if (address === "") {
+            showError("Litigant address cannot be empty.");
+            return;
+        }
+        let fd = new FormData();
+        fd.append("cino", safeEncode(data.cino));
+        fd.append("lit_name", safeEncode(name));
+        fd.append("lit_mobile", safeEncode(mobile));
+        fd.append("lit_address", safeEncode(address));
+        fd.append("passfor", safeEncode('L'));
+        fd.append("recommended_by", safeEncode(recAdvName));
+        fd.append("recommended_code", safeEncode(recAdvCode));
+
+        fd.append("adv_type", safeEncode(party_side));
+
+        // Case info
+        fd.append("courtno", safeEncode(data.court_no));
+        fd.append("itemno", safeEncode(data.item_no));
+        fd.append("cldt", safeEncode(data.cl_date));
+        fd.append("cltype", safeEncode(data.case_type));
+        initOtpFlow({
+            mobile: mobile,
+            purpose: "LITIGANT_PASS",
+            role: "LITIGANT",
+            payload: fd,
+            onSuccess: function(payload) {
+                submitLitigantAfterOtp(payload);
+            }
+        });
     }
 </script>
 

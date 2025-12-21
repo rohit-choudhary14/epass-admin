@@ -508,8 +508,7 @@ class Pass extends BaseModel
         $stmt->execute([':id' => $id]);
 
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        // 🔐 DECRYPT MOBILE NUMBER
+        
         if (!empty($row['adv_mobile'])) {
             $row['adv_mobile'] = $this->decryptData($row['adv_mobile']);
         }
@@ -738,4 +737,35 @@ class Pass extends BaseModel
 
         return false;
     }
+
+
+    public function searchPasses($q)
+{
+    $like = '%' . strtolower($q) . '%';
+
+    $sql = "
+        SELECT 
+            gd.pass_no,
+            gd.cino,
+            gd.party_name,
+            gd.entry_dt,
+            gd.court_no,
+            gd.item_no
+        FROM gatepass_details gd
+        WHERE 
+            LOWER(gd.pass_no) LIKE :q
+            OR LOWER(gd.cino) LIKE :q
+            OR LOWER(gd.party_name) LIKE :q
+        ORDER BY gd.entry_dt DESC
+        LIMIT 50
+    ";
+
+    $stmt = $this->pdo->prepare($sql);
+    $stmt->execute([
+        ':q' => $like
+    ]);
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
 }

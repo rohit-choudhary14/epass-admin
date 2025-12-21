@@ -25,6 +25,10 @@ class BaseModel
         $iv  = str_repeat(chr(0x0), 16);
         return openssl_decrypt(base64_decode($input), $method, $key, OPENSSL_RAW_DATA, $iv);
     }
+    function decodeField($value)
+    {
+        return urldecode(base64_decode($value));
+    }
 
    
 }

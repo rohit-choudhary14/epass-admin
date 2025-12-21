@@ -1,4 +1,6 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
+<?php include __DIR__ . '/../layouts/partyreg.php'; ?>
+<?php include __DIR__ . '/../layouts/OtpModel.php'; ?>
 
 <style>
     /* WRAPPER */
@@ -114,7 +116,120 @@
         font-size: 15px;
     }
 </style>
+<style>
+    body {
+        padding: 0;
+        margin: 0;
+        font-family: Arial, sans-serif;
+    }
 
+    .page-container {
+        max-width: 900px;
+        margin: 30px auto;
+        font-family: "Inter", sans-serif;
+    }
+
+    .form-container {
+        max-width: 900px;
+        margin: 20px auto;
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 20px;
+    }
+
+    label {
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #555;
+    }
+
+    input,
+    select {
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        outline: none;
+    }
+
+    input:focus,
+    select:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    }
+
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        color: #fff;
+        background: #007bff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 100%;
+        transition: background-color .3s;
+    }
+
+    #case-result {
+        margin-top: 25px;
+        padding: 20px;
+        display: none;
+        border-radius: 12px;
+        background: #eef2ff;
+        border-left: 5px solid #4f46e5;
+    }
+
+    .result-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .new-pass-box {
+        padding: 30px;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e5e7eb;
+    }
+
+    .pass-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1e3a8a;
+        text-align: center;
+        margin-bottom: 25px;
+    }
+
+    .generate-btn-full {
+        padding: 12px;
+        width: 100%;
+        background: #059669;
+        color: #fff;
+        border: none;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    .generate-btn-full:hover {
+        background: #047857;
+    }
+</style>
 <div class="form-wrapper">
     <div class="form-card">
         <h2>Party In Person Section Pass</h2>
@@ -166,8 +281,8 @@
 
         </form>
     </div>
+    <div id="case-result"></div>
 </div>
-
 <script>
     $(document).ready(function() {
 
@@ -197,7 +312,44 @@
             });
         });
 
-        // submit form
+        function submitPipSectionAfterOtp(fd) {
+
+            showLoader();
+
+            $.ajax({
+                url: "/HC-EPASS-MVC/public/index.php?r=pass/savePartyInPsersonSection",
+                type: "POST",
+                data: fd,
+                processData: false,
+                contentType: false,
+                dataType: "json",
+
+                success: function(res) {
+                    hideLoader();
+
+                    if (res.status === "ERROR" && res.code === 404) {
+                        showPartyRegisterForm(res.message,);
+                        return;
+                    }
+
+                    if (res.status === "ERROR") {
+                        showError(res.message);
+                        return;
+                    }
+
+                    showSuccess("Pass Generated Successfully! Redirecting...");
+                    setTimeout(() => {
+                        window.location.href = res.redirect;
+                    }, 1500);
+                },
+
+                error: function(xhr) {
+                    hideLoader();
+                    showError("Server Error: " + (xhr.responseText || "Unable to connect."));
+                }
+            });
+        }
+
         $("#sectionPassForm").on("submit", function(e) {
             e.preventDefault();
 
@@ -215,14 +367,11 @@
                 return;
             }
 
-            if (!/^[0-9]{10}$/.test(mobile)) {
+            if (!/^[6-9][0-9]{9}$/.test(mobile)) {
                 showError("Invalid mobile number.");
                 return;
             }
-            if (!/^[6-9]/.test(mobile)) {
-                showError("Mobile must start with 6–9.");
-                return;
-            }
+
             if (/^(\d)\1+$/.test(mobile)) {
                 showError("Invalid mobile number pattern.");
                 return;
@@ -233,61 +382,30 @@
                 return;
             }
 
-            // CHECK purpose remarks
+            // PURPOSE VALIDATION
             let purposeObj = {};
             for (let id of sections) {
                 let purpose = $(`input[name='purpose[${id}]']`).val()?.trim();
-                if (!purpose || purpose === "") {
+                if (!purpose) {
                     showError("Purpose missing for selected section.");
                     return;
                 }
                 purposeObj[id] = purpose;
             }
-
-            //------------------------------
-            // 🔐 ENCRYPTED FormData
-            //------------------------------
             let fd = new FormData();
-
             fd.append("pip_name", safeEncode(name));
             fd.append("pip_mobile", safeEncode(mobile));
             fd.append("pip_address", safeEncode(address));
             fd.append("visit_date", safeEncode(visit));
-
-            // Encrypt sections array
             fd.append("sections", safeEncode(JSON.stringify(sections)));
-
-            // Encrypt purpose remarks object
             fd.append("purpose", safeEncode(JSON.stringify(purposeObj)));
-
-            showLoader();
-
-            $.ajax({
-                url: "/HC-EPASS-MVC/public/index.php?r=pass/savePartyInPsersonSection",
-                type: "POST",
-                data: fd,
-                processData: false, // IMPORTANT for FormData
-                contentType: false, // IMPORTANT for FormData
-                dataType: "json",
-
-                success: function(res) {
-                    hideLoader();
-
-                    if (res.status === "ERROR") {
-                        showError(res.message);
-                        return;
-                    }
-
-                    showSuccess("Pass Generated Successfully! Redirecting...");
-
-                    setTimeout(() => {
-                        window.location.href = res.redirect;
-                    }, 1500);
-                },
-
-                error: function(xhr) {
-                    hideLoader();
-                    showError("Server Error: " + (xhr.responseText || "Unable to connect."));
+            initOtpFlow({
+                mobile: mobile,
+                purpose: "PIP_SECTION_PASS",
+                role: "PIP",
+                payload: fd,
+                onSuccess: function(payload) {
+                    submitPipSectionAfterOtp(payload);
                 }
             });
         });

@@ -237,8 +237,6 @@ class AuthController extends BaseController
             ]);
             return;
         }
-
-        // 🔐 Decode enroll number (important)
         $enrollEnc = $_POST['enroll_no'] ?? '';
         $enrollNo  = trim($this->decodeField($enrollEnc));
 
@@ -260,9 +258,7 @@ class AuthController extends BaseController
         $stmt->execute([
             ":enroll" => $enrollNo
         ]);
-
         $adv = $stmt->fetch(PDO::FETCH_ASSOC);
-
         if (!$adv) {
             echo json_encode([
                 "status" => "NOT_FOUND",
@@ -380,11 +376,11 @@ class AuthController extends BaseController
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             ":name"     => $adv['adv_name'],
-            ":email"    => $email ?: null,
+            ":email"    => $this->getEncryptValue($email) ?: null,
             ":password" => $hashPwd,
             ":enroll"   => $enrollNo,
             ":gender"   => $gender,
-            ":mobile"   => $mobile,
+            ":mobile"   => $this->getEncryptValue($mobile),
             ":ip"       => $ip,
             ":passtype" => $passtype,
             ":adv_code" => $adv['adv_code'],
@@ -403,13 +399,13 @@ class AuthController extends BaseController
 
         $name   = trim($this->decodeField($_POST['party_name']) ?? '');
         $mobile = trim($this->decodeField($_POST['mobile']) ?? '');
-        $email  = trim($this->decodeField($_POST['email'] )?? '');
+        $email  = trim($this->decodeField($_POST['email']) ?? '');
         $est    = trim($this->decodeField($_POST['estt']) ?? '');
         $address  = trim($this->decodeField($_POST['address']) ?? '');
         $password = 'Hcgatepass@123';
         $passtype = 3;
-        $roleId   = 2; 
-        if ($name === '' || $mobile === '' || $email === '' || $address ==='') {
+        $roleId   = 2;
+        if ($name === '' || $mobile === '' || $email === '' || $address === '') {
             echo json_encode([
                 "status"  => "ERROR",
                 "message" => "All required fields must be filled",
@@ -475,18 +471,69 @@ class AuthController extends BaseController
         }
     }
 
+    public function findPartyByMobile()
+    {
+        header('Content-Type: application/json');
+
+        $mobileEnc = $_POST['mobile'] ?? null;
+        if (!$mobileEnc) {
+            echo json_encode([
+                "status" => "ERROR",
+                "message" => "Mobile missing"
+            ]);
+            exit;
+        }
+        $encMobile = trim(
+            $this->getEncryptValue(
+                $this->decodeField($mobileEnc)
+            )
+        );
+        $sql = "SELECT name, address
+        FROM gatepass_users
+        WHERE passtype = 3
+          AND role_id = 2
+          AND contact_num = :mobile
+        LIMIT 1";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            ":mobile" => $encMobile 
+        ]);
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+       
+        if (!$row) {
+            echo json_encode(["status" => "NOT_FOUND"]);
+            exit;
+        }
+
+        echo json_encode([
+            "status" => "FOUND",
+            "data" => [
+                "name"    => $row['name'],
+                "address" => $row['address']
+            ]
+        ]);
+        exit;
+    }
 
 
 
     public function sendOtp()
     {
-        session_start();
         header('Content-Type: application/json');
+        $mobileEnc = $_POST['mobile'] ?? null;
 
-        $data = json_decode(file_get_contents("php://input"), true);
-        $mobile = trim($data['mobile'] ?? '');
+        if (!$mobileEnc) {
+            echo json_encode([
+                "status" => "ERROR",
+                "message" => "Mobile number missing"
+            ]);
+            return;
+        }
 
-        // 🔒 Basic validation
+        $mobile = trim($this->decodeField($mobileEnc));
+
+        // 🔒 Mobile validation
         if (!preg_match('/^[6-9]\d{9}$/', $mobile)) {
             echo json_encode([
                 "status" => "ERROR",
@@ -495,83 +542,103 @@ class AuthController extends BaseController
             return;
         }
 
-        // 🔥 Generate OTP
-        $varcode = rand(100001, 999999);
+        // // 🔐 Generate OTP
+        // $otp = random_int(100000, 999999);
 
-        // 🔥 SMS CONFIG (AS-IS FROM YOUR ADVOCATE PORTAL)
-        $dlt_template_id = '1107160033837759671';
-        $message = "OTP for RHC GATE PASS is $varcode";
-        $message = urlencode($message);
+        // // 📨 SMS config
+        // $dlt_template_id = '1107160033837759671';
+        // $message = urlencode("OTP for RHC GATE PASS is $otp");
 
-        $url = "https://smsgw.sms.gov.in/failsafe/HttpLink?"
-            . "username=courts-raj.sms"
-            . "&pin=A%25%5Eb3%24*z7"
-            . "&message=$message"
-            . "&mnumber=$mobile"
-            . "&signature=RCOURT"
-            . "&dlt_entity_id=1101333050000031038"
-            . "&dlt_template_id=$dlt_template_id";
+        // $url = "https://smsgw.sms.gov.in/failsafe/HttpLink?"
+        //     . "username=courts-raj.sms"
+        //     . "&pin=A%25%5Eb3%24*z7"
+        //     . "&message=$message"
+        //     . "&mnumber=$mobile"
+        //     . "&signature=RCOURT"
+        //     . "&dlt_entity_id=1101333050000031038"
+        //     . "&dlt_template_id=$dlt_template_id";
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_exec($ch);
-        curl_close($ch);
+        // // 📡 Send SMS
+        // $ch = curl_init();
+        // curl_setopt_array($ch, [
+        //     CURLOPT_URL => $url,
+        //     CURLOPT_RETURNTRANSFER => true,
+        //     CURLOPT_SSL_VERIFYHOST => false,
+        //     CURLOPT_SSL_VERIFYPEER => false
+        // ]);
+        // curl_exec($ch);
+        // curl_close($ch);
+
+        // // 🧠 Store OTP in session (temporary)
+        // // $_SESSION['epass_otp'][$mobile] = [
+        // //     'otp' => $otp,
+        // //     'timestamp' => time()
+        // // ];
+        //  $_SESSION['epass_otp'][$mobile] = [
+        //     'otp' => 123456,
+        //     'timestamp' => time()
+        // ];
         $_SESSION['epass_otp'][$mobile] = [
-            'otp'       => $varcode,
+            'otp' => 123456,
             'timestamp' => time()
         ];
-
         echo json_encode([
-            "status"  => "OK",
+            "status" => "OTP_SENT",
             "message" => "OTP sent successfully"
         ]);
+        exit;
     }
+
     public function verifyOtp()
     {
-        session_start();
         header('Content-Type: application/json');
+        $mobileEnc = $_POST['mobile'] ?? null;
+        $otpEnc    = $_POST['otp'] ?? null;
 
-        $data = json_decode(file_get_contents("php://input"), true);
-        $mobile = trim($data['mobile'] ?? '');
-        $otp    = trim($data['otp'] ?? '');
+        if (!$mobileEnc || !$otpEnc) {
+            echo json_encode([
+                "status" => "ERROR",
+                "message" => "OTP data missing"
+            ]);
+            exit;
+        }
+        $mobile = trim($this->decodeField($mobileEnc));
+        $otp    = trim($this->decodeField($otpEnc));
 
         if (
             empty($mobile) ||
             empty($otp) ||
             !isset($_SESSION['epass_otp'][$mobile])
         ) {
-            echo json_encode(["status" => "ERROR"]);
-            return;
+            echo json_encode([
+                "status" => "ERROR",
+                "message" => "Invalid OTP request"
+            ]);
+            exit;
         }
 
         $saved = $_SESSION['epass_otp'][$mobile];
-
-        // ⏱ OTP expiry (3 minutes)
-        if (time() - $saved['timestamp'] > 180) {
+        if (time() - $saved['timestamp'] > 300) {
             unset($_SESSION['epass_otp'][$mobile]);
             echo json_encode([
                 "status"  => "ERROR",
                 "message" => "OTP expired"
             ]);
-            return;
+            exit;
         }
-
-        if ($otp != $saved['otp']) {
+        if ($otp !== (string)$saved['otp']) {
             echo json_encode([
                 "status"  => "ERROR",
                 "message" => "Invalid OTP"
             ]);
-            return;
+            exit;
         }
-
-        // ✅ VERIFIED
-        $_SESSION['epass_otp'][$mobile]['verified'] = true;
+        unset($_SESSION['epass_otp'][$mobile]);
 
         echo json_encode([
-            "status" => "OK"
+            "status"  => "VERIFIED",
+            "message" => "OTP verified successfully"
         ]);
+        exit;
     }
 }

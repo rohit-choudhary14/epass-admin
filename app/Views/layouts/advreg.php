@@ -1,7 +1,10 @@
-
 <script>
-function isValidEmail(email) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    function isValidEmail(email) {
+        if (!email || typeof email !== "string") {
+            return false;
+        }
+
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
     }
 
     function registerAdvocate(enrollNo) {
@@ -56,8 +59,6 @@ function isValidEmail(email) {
 
         const box = document.getElementById("adv-details-box");
         box.style.display = "block";
-
-        // 🔹 check existing values
         const hasMobile = !!data.mobile;
         const hasEmail = !!data.email;
         const hasAddress = !!data.address;
@@ -118,8 +119,6 @@ function isValidEmail(email) {
                 showError("Please select Pass Type.");
                 return;
             }
-
-            // 🔒 Validate only missing fields
             if (!hasMobile && !document.getElementById("adv_mobile").value.trim()) {
                 showError("Mobile number is required");
                 return;
@@ -128,10 +127,15 @@ function isValidEmail(email) {
                 showError("Address is required");
                 return;
             }
-
             if (!hasEmail) {
                 const emailVal = document.getElementById("adv_email").value.trim();
-                if (emailVal && !isValidEmail(emailVal)) {
+
+                if (!emailVal) {
+                    showError("Email is required");
+                    return;
+                }
+
+                if (!isValidEmail(emailVal)) {
                     showError("Please enter a valid email address");
                     return;
                 }
@@ -144,8 +148,17 @@ function isValidEmail(email) {
             );
 
             if (!ok) return;
-
-            registerAdvocate(data.adv_reg || data.enroll_no);
+            initOtpFlow({
+                mobile: document.getElementById("adv_mobile").value.trim(),
+                purpose: "COURT_PASS",
+                role: "PARTY",
+                payload: {
+                    data
+                },
+                onSuccess: (p) => {
+                    registerAdvocate(data.adv_reg || data.enroll_no);
+                }
+            });
         };
     }
 
@@ -227,4 +240,32 @@ function isValidEmail(email) {
     `;
     }
 
-    </script>
+
+    async function fetchMobileByEnroll(enroll) {
+        let fd = new FormData();
+        fd.append("enroll_no", safeEncode(enroll));
+        showLoader();
+        try {
+            const response = await fetch(
+                "/HC-EPASS-MVC/public/index.php?r=auth/findAdvDetails", {
+                    method: "POST",
+                    body: fd
+                }
+            );
+            const text = await response.text();
+            let res = JSON.parse(text);
+            hideLoader();
+            if (res.status !== "FOUND" || !res.data || !res.data.mobile) {
+                throw new Error(res.message || "Mobile not found");
+            }
+
+            return res.data.mobile;
+
+        } catch (err) {
+            hideLoader();
+            showError("Unable to fetch advocate mobile number");
+            console.error("FETCH MOBILE ERROR:", err);
+            return null;
+        }
+    }
+</script>

@@ -1,5 +1,6 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
 <?php include __DIR__ . '/../layouts/advreg.php'; ?>
+<?php include __DIR__ . '/../layouts/OtpModel.php'; ?>
 
 <style>
     /* WRAPPER */
@@ -167,7 +168,7 @@
         margin-right: 6px;
     }
 
-    
+
     #case-result {
         margin-top: 25px;
         padding: 20px;
@@ -215,7 +216,8 @@
         text-align: center;
         margin-bottom: 25px;
     }
-    #enroll_no{
+
+    #enroll_no {
         width: 100%;
     }
 </style>
@@ -428,8 +430,8 @@
     <div id="case-result"></div>
 
 </div>
-  <!-- AJAX RESULTS -->
-    
+<!-- AJAX RESULTS -->
+
 <script>
     $(document).ready(function() {
         $('#sections').select2({
@@ -467,7 +469,7 @@
 
 <script>
     $(document).ready(function() {
-    
+
         function isValidEmail(email) {
             return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         }
@@ -675,25 +677,62 @@
 
            <form id="advRegisterForm" onsubmit="checkEnrollAndFetchDetails(); return false;">
 
-    <div class="form-group">
-        <label>Enrollment Number</label>
-        <input type="text" name="enroll_no" id="enroll_no" required>
-    </div>
+                <div class="form-group">
+                    <label>Enrollment Number</label>
+                    <input type="text" name="enroll_no" id="enroll_no" required>
+                </div>
 
-    <div id="adv-details-box" style="display:none"></div>
+                <div id="adv-details-box" style="display:none"></div>
 
-    <button type="submit" class="generate-btn">
-        Search Advocate
-    </button>
+                <button type="submit" class="generate-btn">
+                    Search Advocate
+                </button>
 
-    <button type="button" class="generate-btn" style="background:#6b7280;margin-left:10px"
-        onclick="location.reload()">
-        Cancel
-    </button>
-</form>
+                <button type="button" class="generate-btn" style="background:#6b7280;margin-left:10px"
+                    onclick="location.reload()">
+                    Cancel
+                </button>
+            </form>
         </div>
     `;
         }
+
+        function submitSectionPassWithOtp(encryptedData) {
+
+            showLoader();
+
+            $.ajax({
+                url: "/HC-EPASS-MVC/public/index.php?r=pass/saveAdvocateSection",
+                type: "POST",
+                data: encryptedData,
+                dataType: "json",
+
+                success: function(res) {
+                    hideLoader();
+
+                    if (res.status === "ERROR" && res.code === 404) {
+                        showAdvocateRegisterForm(res.message);
+                        return;
+                    }
+                    if (res.status === "ERROR") {
+                        showError(res.message || "Something went wrong.");
+                        return;
+                    }
+
+                    showSuccess("Pass Generated Successfully! Redirecting...");
+
+                    setTimeout(() => {
+                        window.location.href = res.redirect;
+                    }, 1500);
+                },
+
+                error: function(xhr) {
+                    hideLoader();
+                    showError("Server Error: " + (xhr.responseText || "Unable to connect."));
+                }
+            });
+        }
+
         $("#sectionPassForm").on("submit", function(e) {
             e.preventDefault();
 
@@ -719,8 +758,6 @@
                     return;
                 }
             }
-
-            // ---------- 🔐 ENCRYPT ALL VALUES BEFORE SUBMITTING ----------
             let encryptedData = {};
 
             encryptedData["enroll"] = safeEncode(enroll);
@@ -736,40 +773,27 @@
             });
 
             encryptedData["purpose"] = safeEncode(JSON.stringify(purposes));
+            (async () => {
 
-            showLoader();
+                const mobile = await fetchMobileByEnroll(enroll);
 
-            $.ajax({
-                url: "/HC-EPASS-MVC/public/index.php?r=pass/saveAdvocateSection",
-                type: "POST",
-                data: encryptedData,
-                dataType: "json",
-
-                success: function(res) {
-                    hideLoader();
-
-
-                    if (res.status === "ERROR" && res.code === 404) {
-                        showAdvocateRegisterForm(res.message);
-                        return;
-                    }
-                    if (res.status === "ERROR") {
-                        showError(res.message || "Something went wrong.");
-                        return;
-                    }
-
-                    showSuccess("Pass Generated Successfully! Redirecting...");
-
-                    setTimeout(() => {
-                        window.location.href = res.redirect;
-                    }, 1500);
-                },
-
-                error: function(xhr) {
-                    hideLoader();
-                    showError("Server Error: " + (xhr.responseText || "Unable to connect."));
+                if (!mobile) {
+                    return; 
                 }
-            });
+
+                initOtpFlow({
+                    mobile: mobile,
+                    purpose: "ADV_SECTION_PASS",
+                    role: "ADV",
+                    payload: encryptedData,
+                    onSuccess: function(payload) {
+                        submitSectionPassWithOtp(payload);
+                    }
+                });
+
+            })();
+
+
         });
 
 
